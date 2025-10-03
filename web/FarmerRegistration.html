@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Farmer Registration Form</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      background-size: cover;
+      background-position: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 50px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+    }
+
+    .form-group input.valid {
+      border-color: #4CAF50;
+      background-color: rgba(76, 175, 80, 0.1);
+    }
+
+    .form-group input.invalid {
+      border-color: #f44336;
+      background-color: rgba(244, 67, 54, 0.1);
+    }
+
+    .form-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 10px;
+    }
+
+    .error-message {
+      color: #f44336;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .success-message {
+      color: #4CAF50;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-create {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(45deg, #4CAF50, #45a049);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+    }
+
+    .btn-create:hover:not(:disabled) {
+      background: linear-gradient(45deg, #45a049, #4CAF50);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-create:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .terms {
+      display: flex;
+      align-items: flex-start;
+      margin-top: 10px;
+    }
+
+    .terms label {
+      margin-left: 10px;
+      font-weight: 400;
+      line-height: 1.4;
+    }
+
+    .password-strength {
+      margin-top: 5px;
+    }
+
+    .strength-bar {
+      height: 4px;
+      background-color: #ddd;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .strength-fill {
+      height: 100%;
+      transition: all 0.3s ease;
+      border-radius: 2px;
+    }
+
+    .strength-weak { background-color: #f44336; width: 25%; }
+    .strength-fair { background-color: #ff9800; width: 50%; }
+    .strength-good { background-color: #2196f3; width: 75%; }
+    .strength-strong { background-color: #4CAF50; width: 100%; }
+
+    .strength-text {
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .form-summary {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #4CAF50;
+      display: none;
+    }
+
+    .summary-item {
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .field-counter {
+      position: absolute;
+      right: 10px;
+      top: 35px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .tooltip {
+      position: relative;
+      cursor: help;
+    }
+
+    .tooltip::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    }
+
+    .tooltip:hover::after {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🌾 Farmer Registration</h2>
+    
+    <div class="form-summary" id="formSummary">
+      <h4>Form Completion Progress</h4>
+      <div id="progressText">0% Complete</div>
+    </div>
+
+    <form id="registrationForm" action="FarmerRegistrationChecker" method="post">
+      <div class="form-group">
+        <label for="first-name">First Name *</label>
+        <input type="text" id="first-name" name="first-name" placeholder="Enter your first name" required maxlength="50" />
+        <div class="field-counter"><span id="fname-count">0</span>/50</div>
+        <div class="error-message" id="fname-error"></div>
+        <div class="success-message" id="fname-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="last-name">Last Name *</label>
+        <input type="text" id="last-name" name="last-name" placeholder="Enter your last name" required maxlength="50" />
+        <div class="field-counter"><span id="lname-count">0</span>/50</div>
+        <div class="error-message" id="lname-error"></div>
+        <div class="success-message" id="lname-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="gender">Gender *</label>
+        <select id="gender" name="gender" required>
+          <option value="">Select Gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+        <div class="error-message" id="gender-error"></div>
+        <div class="success-message" id="gender-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="crop-grown" class="tooltip" data-tooltip="List the main crops you grow (e.g., wheat, rice, vegetables)">Crop Grown *</label>
+        <input type="text" id="crop-grown" name="crop-grown" placeholder="Enter the name of the crop/vegetable" required maxlength="100" />
+        <div class="field-counter"><span id="crop-count">0</span>/100</div>
+        <div class="error-message" id="crop-error"></div>
+        <div class="success-message" id="crop-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="farmsize" class="tooltip" data-tooltip="Enter your farm size (e.g., 5 acres, 2 hectares)">Farm Size *</label>
+        <input type="text" id="farmsize" name="farmsize" placeholder="e.g., 5 acres or 2 hectares" required maxlength="20" />
+        <div class="field-counter"><span id="farm-count">0</span>/20</div>
+        <div class="error-message" id="farm-error"></div>
+        <div class="success-message" id="farm-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="mobile">Mobile Number *</label>
+        <input type="tel" id="mobile" name="mobile" placeholder="Enter your 10-digit mobile number" required maxlength="15" />
+        <div class="error-message" id="mobile-error"></div>
+        <div class="success-message" id="mobile-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address *</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email address" required maxlength="100" />
+        <div class="error-message" id="email-error"></div>
+        <div class="success-message" id="email-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password *</label>
+        <input type="password" id="password" name="password" placeholder="Enter strong password (min 8 characters)" required minlength="8" maxlength="128" />
+        <div class="password-requirements" style="font-size: 12px; margin-top: 5px; color: #666;">
+          <div>Password must contain:</div>
+          <div id="req-length" style="color: #f44336;">✗ At least 8 characters</div>
+          <div id="req-lower" style="color: #f44336;">✗ One lowercase letter (a-z)</div>
+          <div id="req-upper" style="color: #f44336;">✗ One uppercase letter (A-Z)</div>
+          <div id="req-number" style="color: #f44336;">✗ One number (0-9)</div>
+          <div id="req-special" style="color: #f44336;">✗ One special character (!@#$%^&*)</div>
+        </div>
+        <div class="password-strength">
+          <div class="strength-bar">
+            <div class="strength-fill" id="strengthFill"></div>
+          </div>
+          <div class="strength-text" id="strengthText">Password requirements: 8+ characters, upper/lowercase, numbers, symbols</div>
+        </div>
+        <div class="error-message" id="password-error"></div>
+        <div class="success-message" id="password-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm-password">Confirm Password *</label>
+        <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm your password" required />
+        <div class="error-message" id="confirm-error"></div>
+        <div class="success-message" id="confirm-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="street">Street Address *</label>
+        <input type="text" id="street" name="street" placeholder="Enter your street address" required maxlength="200" />
+        <div class="field-counter"><span id="street-count">0</span>/200</div>
+        <div class="error-message" id="street-error"></div>
+        <div class="success-message" id="street-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="city">City *</label>
+        <input type="text" id="city" name="city" placeholder="Enter your city" required maxlength="50" />
+        <div class="field-counter"><span id="city-count">0</span>/50</div>
+        <div class="error-message" id="city-error"></div>
+        <div class="success-message" id="city-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="state">State/Province *</label>
+        <input type="text" id="state" name="state" placeholder="Enter your state or province" required maxlength="50" />
+        <div class="field-counter"><span id="state-count">0</span>/50</div>
+        <div class="error-message" id="state-error"></div>
+        <div class="success-message" id="state-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="postal">Postal/ZIP Code *</label>
+        <input type="text" id="postal" name="postal" placeholder="Enter your postal/ZIP code" required maxlength="10" />
+        <div class="error-message" id="postal-error"></div>
+        <div class="success-message" id="postal-success"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="country">Country *</label>
+        <input type="text" id="country" name="country" placeholder="Enter your country" required maxlength="50" />
+        <div class="field-counter"><span id="country-count">0</span>/50</div>
+        <div class="error-message" id="country-error"></div>
+        <div class="success-message" id="country-success"></div>
+      </div>
+
+      <div class="form-group terms">
+        <input type="checkbox" id="terms" name="terms" required />
+        <label for="terms">I agree to the <a href="#" onclick="showTerms(); return false;">terms and conditions</a> and privacy policy *</label>
+        <div class="error-message" id="terms-error"></div>
+      </div>
+
+      <button type="submit" class="btn-create" id="submitBtn" disabled>Complete Registration</button>
+    </form>
+  </div>
+
+  <script>
+    // Validation patterns and rules
+    const validationRules = {
+      name: /^[a-zA-Z\s]{2,50}$/,
+      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      mobile: /^[+]?[\d\s\-\(\)]{10,15}$/,
+      postalCode: /^[a-zA-Z0-9\s\-]{3,10}$/,
+      farmSize: /^[\d\.\,\s]+(acres?|hectares?|sq\.?\s?ft\.?|sq\.?\s?m\.?)/i
+    };
+
+    // Form elements
+    const form = document.getElementById('registrationForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const formSummary = document.getElementById('formSummary');
+    
+    // Real-time validation for all fields
+    const fields = [
+      'first-name', 'last-name', 'gender', 'crop-grown', 'farmsize', 
+      'mobile', 'email', 'password', 'confirm-password', 'street', 
+      'city', 'state', 'postal', 'country', 'terms'
+    ];
+
+    // Character counters
+    const counterFields = ['first-name', 'last-name', 'crop-grown', 'farmsize', 'street', 'city', 'state', 'country'];
+    
+    counterFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      const counter = document.getElementById(fieldId.replace('-', '') + '-count');
+      if (field && counter) {
+        field.addEventListener('input', function() {
+          counter.textContent = this.value.length;
+        });
+      }
+    });
+
+    // Validate individual fields
+    function validateField(fieldId, value) {
+      const errorElement = document.getElementById(fieldId + '-error');
+      const successElement = document.getElementById(fieldId + '-success');
+      const inputElement = document.getElementById(fieldId);
+      
+      let isValid = true;
+      let errorMessage = '';
+      let successMessage = '';
+
+      switch(fieldId) {
+        case 'first-name':
+        case 'last-name':
+          if (!value.trim()) {
+            errorMessage = 'This field is required';
+            isValid = false;
+          } else if (!validationRules.name.test(value)) {
+            errorMessage = 'Name should contain only letters and spaces (2-50 characters)';
+            isValid = false;
+          } else {
+            successMessage = 'Valid name';
+          }
+          break;
+
+        case 'email':
+          if (!value.trim()) {
+            errorMessage = 'Email is required';
+            isValid = false;
+          } else if (!validationRules.email.test(value)) {
+            errorMessage = 'Please enter a valid email address';
+            isValid = false;
+          } else {
+            successMessage = 'Valid email address';
+          }
+          break;
+
+        case 'mobile':
+          if (!value.trim()) {
+            errorMessage = 'Mobile number is required';
+            isValid = false;
+          } else if (!validationRules.mobile.test(value)) {
+            errorMessage = 'Please enter a valid mobile number (10-15 digits)';
+            isValid = false;
+          } else {
+            successMessage = 'Valid mobile number';
+          }
+          break;
+
+        case 'password':
+          const strength = checkPasswordStrength(value);
+          if (!value) {
+            errorMessage = 'Password is required';
+            isValid = false;
+          } else if (value.length < 8) {
+            errorMessage = 'Password must be at least 8 characters long';
+            isValid = false;
+          } else if (value.length > 128) {
+            errorMessage = 'Password must not exceed 128 characters';
+            isValid = false;
+          } else if (!/[a-z]/.test(value)) {
+            errorMessage = 'Password must contain at least one lowercase letter';
+            isValid = false;
+          } else if (!/[A-Z]/.test(value)) {
+            errorMessage = 'Password must contain at least one uppercase letter';
+            isValid = false;
+          } else if (!/[0-9]/.test(value)) {
+            errorMessage = 'Password must contain at least one number';
+            isValid = false;
+          } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+            errorMessage = 'Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)';
+            isValid = false;
+          } else if (/(.)\1{2,}/.test(value)) {
+            errorMessage = 'Password cannot contain more than 2 consecutive identical characters';
+            isValid = false;
+          } else if (/^(.{0,2})\1+$/.test(value)) {
+            errorMessage = 'Password cannot be repetitive patterns';
+            isValid = false;
+          } else if (isCommonPassword(value)) {
+            errorMessage = 'This password is too common. Please choose a more unique password';
+            isValid = false;
+          } else if (containsPersonalInfo(value)) {
+            errorMessage = 'Password should not contain personal information (name, email, etc.)';
+            isValid = false;
+          } else if (strength.score < 4) {
+            errorMessage = `Password strength: ${strength.label}. Make it stronger for better security`;
+            isValid = false;
+          } else {
+            successMessage = `Excellent password! Strength: ${strength.label}`;
+          }
+          break;
+
+        case 'confirm-password':
+          const password = document.getElementById('password').value;
+          if (!value) {
+            errorMessage = 'Please confirm your password';
+            isValid = false;
+          } else if (value !== password) {
+            errorMessage = 'Passwords do not match';
+            isValid = false;
+          } else {
+            successMessage = 'Passwords match';
+          }
+          break;
+
+        case 'farmsize':
+          if (!value.trim()) {
+            errorMessage = 'Farm size is required';
+            isValid = false;
+          } else if (!validationRules.farmSize.test(value)) {
+            errorMessage = 'Please include unit (e.g., "5 acres", "2 hectares")';
+            isValid = false;
+          } else {
+            successMessage = 'Valid farm size';
+          }
+          break;
+
+        case 'postal':
+          if (!value.trim()) {
+            errorMessage = 'Postal code is required';
+            isValid = false;
+          } else if (!validationRules.postalCode.test(value)) {
+            errorMessage = 'Please enter a valid postal/ZIP code';
+            isValid = false;
+          } else {
+            successMessage = 'Valid postal code';
+          }
+          break;
+
+        case 'crop-grown':
+        case 'street':
+        case 'city':
+        case 'state':
+        case 'country':
+          if (!value.trim()) {
+            errorMessage = 'This field is required';
+            isValid = false;
+          } else if (value.length < 2) {
+            errorMessage = 'Please enter at least 2 characters';
+            isValid = false;
+          } else {
+            successMessage = 'Valid input';
+          }
+          break;
+
+        case 'gender':
+          if (!value) {
+            errorMessage = 'Please select your gender';
+            isValid = false;
+          } else {
+            successMessage = 'Gender selected';
+          }
+          break;
+
+        case 'terms':
+          const termsCheckbox = document.getElementById('terms');
+          if (!termsCheckbox.checked) {
+            errorMessage = 'You must agree to the terms and conditions';
+            isValid = false;
+          }
+          break;
+      }
+
+      // Display validation results
+      if (errorElement) {
+        errorElement.textContent = errorMessage;
+        errorElement.style.display = errorMessage ? 'block' : 'none';
+      }
+      
+      if (successElement) {
+        successElement.textContent = successMessage;
+        successElement.style.display = successMessage ? 'block' : 'none';
+      }
+
+      if (inputElement && inputElement.type !== 'checkbox') {
+        inputElement.classList.remove('valid', 'invalid');
+        if (value.trim()) {
+          inputElement.classList.add(isValid ? 'valid' : 'invalid');
+        }
+      }
+
+      return isValid;
+    }
+
+    // Password strength checker with comprehensive validation
+    function checkPasswordStrength(password) {
+      let score = 0;
+      let feedback = [];
+
+      // Length scoring
+      if (password.length >= 8) score++;
+      if (password.length >= 12) score++;
+      if (password.length >= 16) score++;
+
+      // Character type scoring
+      if (/[a-z]/.test(password)) score++;
+      if (/[A-Z]/.test(password)) score++;
+      if (/[0-9]/.test(password)) score++;
+      if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+
+      // Additional security checks
+      if (password.length >= 10 && /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(password)) {
+        score++; // Bonus for meeting all criteria with good length
+      }
+
+      // Penalty for common patterns
+      if (/(.)\1{2,}/.test(password)) score -= 2; // Repeated characters
+      if (/^(.{0,2})\1+$/.test(password)) score -= 2; // Repetitive patterns
+      if (isCommonPassword(password)) score -= 3; // Common passwords
+
+      const strengthFill = document.getElementById('strengthFill');
+      const strengthText = document.getElementById('strengthText');
+      
+      let label, className, details;
+      
+      if (score < 2) {
+        label = 'Very Weak';
+        className = 'strength-weak';
+        details = 'Add more character types and length';
+      } else if (score < 4) {
+        label = 'Weak';
+        className = 'strength-fair';
+        details = 'Include uppercase, numbers, and symbols';
+      } else if (score < 6) {
+        label = 'Good';
+        className = 'strength-good';
+        details = 'Consider making it longer';
+      } else if (score < 8) {
+        label = 'Strong';
+        className = 'strength-strong';
+        details = 'Excellent password!';
+      } else {
+        label = 'Very Strong';
+        className = 'strength-strong';
+        details = 'Perfect password security!';
+      }
+
+      if (strengthFill) {
+        strengthFill.className = 'strength-fill ' + className;
+      }
+      
+      if (strengthText) {
+        strengthText.textContent = password ? `${label} - ${details}` : 'Password requirements: 8+ characters, upper/lowercase, numbers, symbols';
+      }
+
+      return { score, label, details };
+    }
+
+    // Check for common passwords
+    function isCommonPassword(password) {
+      const commonPasswords = [
+        'password', 'password123', '123456', '123456789', 'qwerty', 'abc123', 
+        'password1', 'admin', 'letmein', 'welcome', 'monkey', '1234567890',
+        'password12', 'qwerty123', '123abc', 'admin123', 'root', 'toor',
+        'pass', 'test', 'guest', 'user', 'demo', 'sample', 'temp', 'default',
+        'farmer', 'agriculture', 'farming', 'crop', 'harvest', 'field'
+      ];
+      
+      return commonPasswords.includes(password.toLowerCase()) || 
+             commonPasswords.some(common => password.toLowerCase().includes(common));
+    }
+
+    // Check if password contains personal information
+    function containsPersonalInfo(password) {
+      const firstName = document.getElementById('first-name').value.toLowerCase();
+      const lastName = document.getElementById('last-name').value.toLowerCase();
+      const email = document.getElementById('email').value.toLowerCase().split('@')[0];
+      
+      const personalInfo = [firstName, lastName, email].filter(info => info.length > 2);
+      
+      return personalInfo.some(info => 
+        password.toLowerCase().includes(info) || 
+        info.includes(password.toLowerCase())
+      );
+    }
+
+    // Add event listeners to all fields
+    fields.forEach(fieldId => {
+      const element = document.getElementById(fieldId);
+      if (element) {
+        const eventType = element.type === 'checkbox' ? 'change' : 'input';
+        element.addEventListener(eventType, function() {
+          const value = element.type === 'checkbox' ? element.checked : element.value;
+          validateField(fieldId, value);
+          updateFormProgress();
+          updateSubmitButton();
+        });
+
+        // Special handling for password with real-time requirement checking
+        if (fieldId === 'password') {
+          element.addEventListener('input', function() {
+            updatePasswordRequirements(this.value);
+            const confirmPassword = document.getElementById('confirm-password');
+            if (confirmPassword.value) {
+              validateField('confirm-password', confirmPassword.value);
+            }
+          });
+        }
+      }
+    });
+
+    // Update password requirement indicators
+    function updatePasswordRequirements(password) {
+      const requirements = [
+        { id: 'req-length', test: password.length >= 8, text: 'At least 8 characters' },
+        { id: 'req-lower', test: /[a-z]/.test(password), text: 'One lowercase letter (a-z)' },
+        { id: 'req-upper', test: /[A-Z]/.test(password), text: 'One uppercase letter (A-Z)' },
+        { id: 'req-number', test: /[0-9]/.test(password), text: 'One number (0-9)' },
+        { id: 'req-special', test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password), text: 'One special character (!@#$%^&*)' }
+      ];
+
+      requirements.forEach(req => {
+        const element = document.getElementById(req.id);
+        if (element) {
+          if (req.test) {
+            element.style.color = '#4CAF50';
+            element.textContent = '✓ ' + req.text;
+          } else {
+            element.style.color = '#f44336';
+            element.textContent = '✗ ' + req.text;
+          }
+        }
+      });
+    }
+
+    // Update form completion progress
+    function updateFormProgress() {
+      const totalFields = fields.length;
+      let completedFields = 0;
+
+      fields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+          const value = element.type === 'checkbox' ? element.checked : element.value.trim();
+          if (value && validateField(fieldId, value)) {
+            completedFields++;
+          }
+        }
+      });
+
+      const progress = Math.round((completedFields / totalFields) * 100);
+      document.getElementById('progressText').textContent = `${progress}% Complete (${completedFields}/${totalFields} fields)`;
+      
+      if (progress > 20) {
+        formSummary.style.display = 'block';
+      }
+    }
+
+    // Update submit button state
+    function updateSubmitButton() {
+      let allValid = true;
+
+      fields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+          const value = element.type === 'checkbox' ? element.checked : element.value.trim();
+          if (!value || !validateField(fieldId, value)) {
+            allValid = false;
+          }
+        }
+      });
+
+      submitBtn.disabled = !allValid;
+      submitBtn.textContent = allValid ? 'Complete Registration ✓' : 'Please Complete All Fields';
+    }
+
+    // Form submission handler
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      let allValid = true;
+      let firstInvalidField = null;
+
+      // Validate all fields
+      fields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+          const value = element.type === 'checkbox' ? element.checked : element.value.trim();
+          if (!validateField(fieldId, value)) {
+            allValid = false;
+            if (!firstInvalidField) {
+              firstInvalidField = element;
+            }
+          }
+        }
+      });
+
+      if (!allValid) {
+        alert('Please correct all errors before submitting the form.');
+        if (firstInvalidField) {
+          firstInvalidField.focus();
+        }
+        return false;
+      }
+
+      // Additional checks
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      if (password !== confirmPassword) {
+        alert('Passwords do not match. Please check and try again.');
+        document.getElementById('confirm-password').focus();
+        return false;
+      }
+
+      // If all validations pass, show success message and submit
+      if (confirm('Are you sure you want to submit your registration? Please review all information before confirming.')) {
+        alert('Registration submitted successfully! 🎉\nYou will receive a confirmation email shortly.');
+        // Uncomment the line below to actually submit the form
+       this.submit();
+      }
+      
+      return false;
+    });
+
+    // Show terms and conditions
+    function showTerms() {
+      alert('Terms and Conditions:\n\n1. All information provided must be accurate and truthful.\n2. You agree to use this platform responsibly.\n3. Your data will be protected according to our privacy policy.\n4. You must be at least 18 years old to register.\n5. False information may result in account termination.\n\nBy checking the box, you agree to these terms.');
+    }
+
+    // Initialize form
+    document.addEventListener('DOMContentLoaded', function() {
+      updateSubmitButton();
+      
+      // Add some initial help text
+      setTimeout(() => {
+        if (document.getElementById('first-name').value === '') {
+          document.getElementById('progressText').textContent = '0% Complete - Start by entering your name';
+        }
+      }, 1000);
+    });
+
+    // Auto-format mobile number
+    document.getElementById('mobile').addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length <= 10) {
+        e.target.value = value;
+      }
+    });
+
+    // Auto-capitalize names
+    ['first-name', 'last-name', 'city', 'state', 'country'].forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('input', function(e) {
+          e.target.value = e.target.value.replace(/\b\w/g, l => l.toUpperCase());
+        });
+      }
+    });
+
+    // Prevent form submission on Enter key (except for submit button)
+    form.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target.type !== 'submit') {
+        e.preventDefault();
+        // Move to next field
+        const formElements = Array.from(form.elements);
+        const currentIndex = formElements.indexOf(e.target);
+        const nextElement = formElements[currentIndex + 1];
+        if (nextElement && nextElement.type !== 'submit') {
+          nextElement.focus();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

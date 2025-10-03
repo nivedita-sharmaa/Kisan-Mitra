@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisan Mitra - Bridging Farmers & Buyers</title>
+    <style>
+    /* Global Styles */
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); 
+        color: #2f3e46;
+    }
+
+    .page {
+        padding: 60px 20px;
+    }
+
+    h1, h2 {
+        color: #0c4b33;
+        font-family: 'Segoe UI', 'Roboto', sans-serif;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    /* Hero Section with enhanced styling */
+    #page1 {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, rgba(26, 42, 108, 0.9), rgba(178, 31, 31, 0.8), rgba(253, 187, 45, 0.8));
+        position: relative;
+        overflow: hidden;
+    }
+    
+    #page1::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('/api/placeholder/1600/900') center/cover no-repeat;
+        opacity: 0.15;
+        z-index: -1;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: auto;
+        position: relative;
+        z-index: 2;
+    }
+
+    .slides {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .text-section {
+        height:420px;
+        padding: 40px;
+        flex: 1;
+        min-width: 300px;
+        max-width: 600px;
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        animation: fadeIn 1s ease-out;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 30px;
+    }
+    
+    .text-section h1 {
+        font-size: 3.5rem;
+        margin: 0;
+        background: linear-gradient(90deg, #0c4b33, #FF9E00);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        letter-spacing: 1px;
+        text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.1);
+    }
+    
+    .text-section p {
+        font-size: 1.5rem;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .image-section {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        min-width: 320px;
+    }
+    
+    .image-section img {
+        width: 100%;
+        max-width: 500px;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        animation: float 6s ease-in-out infinite;
+        transition: transform 0.3s ease;
+    }
+    
+    .image-section img:hover {
+        transform: translateY(-10px);
+    }
+
+    .buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        margin-top: 10px;
+    }
+    
+    .button {
+        display: inline-block;
+        padding: 15px 32px;
+        background: linear-gradient(to right, #0c4b33, #FF9E00);
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        text-decoration: none;
+        border-radius: 50px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        width: 220px;
+        text-align: center;
+    }
+    
+    .button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to right, #FF9E00, #0c4b33);
+        transition: left 0.3s ease;
+        z-index: -1;
+    }
+    
+    .button:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .button:hover::before {
+        left: 0;
+    }
+    
+    a.button {
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    /* Services Section Heading Improvements */
+    .services-header {
+        text-align: center;
+        margin-bottom: 50px;
+        position: relative;
+        animation: fadeIn 1s ease-out;
+    }
+
+    .services-header h1 {
+        font-size: 2.8rem;
+        color: #0c4b33;
+        margin-bottom: 15px;
+        position: relative;
+        display: inline-block;
+        font-weight: 700;
+    }
+
+    .services-header h1::after {
+        content: '';
+        position: absolute;
+        width: 70%;
+        height: 4px;
+        bottom: -10px;
+        left: 15%;
+        background: linear-gradient(90deg, #0c4b33, #FF9E00);
+        border-radius: 4px;
+    }
+
+    .services-header p {
+        color: #444;
+        font-size: 1.3rem;
+        max-width: 800px;
+        margin: 20px auto 0;
+        line-height: 1.6;
+    }
+
+    /* Service Cards Enhanced Styling */
+    .services-container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 50px 30px;
+        background-color: rgba(255, 255, 255, 0.92);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .services {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 30px;
+    }
+
+    .service {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.4s ease;
+        position: relative;
+        transform: translateY(50px);
+        opacity: 0;
+        animation: fadeInUp 0.6s forwards;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .service:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        border-color: rgba(12, 75, 51, 0.2);
+    }
+
+    .service-icon {
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f8faf8, #e0eee0);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .service-icon::after {
+        content: '';
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+        top: -50%;
+        left: -50%;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    
+    .service:hover .service-icon::after {
+        opacity: 1;
+    }
+
+    .service-icon svg {
+        width: 60px;
+        height: 60px;
+        fill: #0c4b33;
+        transition: transform 0.4s ease;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    .service:hover .service-icon svg {
+        transform: scale(1.15) rotate(5deg);
+        fill: #FF9E00;
+    }
+
+    .service-content {
+        padding: 25px;
+    }
+
+    .service h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.4rem;
+        color: #0c4b33;
+        position: relative;
+        padding-bottom: 12px;
+        transition: color 0.3s ease;
+    }
+    
+    .service:hover h2 {
+        color: #FF9E00;
+    }
+
+    .service h2::after {
+        content: '';
+        position: absolute;
+        width: 40px;
+        height: 3px;
+        background: linear-gradient(90deg, #0c4b33, #FF9E00);
+        left: 0;
+        bottom: 0;
+        border-radius: 2px;
+        transition: width 0.4s ease;
+    }
+
+    .service:hover h2::after {
+        width: 80px;
+    }
+
+    .service p {
+        color: #555;
+        line-height: 1.7;
+        margin-bottom: 20px;
+        font-size: 1rem;
+    }
+
+    .service-link {
+        display: inline-block;
+        color: #0c4b33;
+        font-weight: 600;
+        text-decoration: none;
+        position: relative;
+        padding-right: 25px;
+        transition: all 0.3s ease;
+    }
+
+    .service-link:hover {
+        color: #FF9E00;
+        transform: translateX(5px);
+    }
+
+    .service-link::after {
+        content: '→';
+        position: absolute;
+        right: 0;
+        transition: transform 0.3s ease;
+    }
+
+    .service-link:hover::after {
+        transform: translateX(5px);
+    }
+
+    /* Community Section */
+    .community-container {
+        max-width: 1100px;
+        margin: auto;
+    }
+
+    .community-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        justify-content: center;
+    }
+
+    .card {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        width: 300px;
+        text-align: center;
+    }
+
+    /* How It Works Section */
+    .container ol {
+        counter-reset: section;
+        padding-left: 0;
+    }
+
+    .container li {
+        list-style: none;
+        margin-bottom: 30px;
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .container li::before {
+        counter-increment: section;
+        content: counter(section);
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-size: 24px;
+        background: linear-gradient(90deg, #6BBF59, #D4A017);
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+    }
+
+    .start-button {
+        display: inline-block;
+        margin-top: 20px;
+    }
+
+    /* Contact Section */
+    .contact-info {
+        margin-top: 30px;
+    }
+
+    footer {
+        background-color: #e8f5e9;
+        color: #555;
+        text-align: center;
+        padding: 15px 10px;
+        font-size: 1rem;
+        border-top: 1px solid #e8f5e9;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Background Elements Styling */
+    .bg-elements {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    .floating-element {
+        position: absolute;
+        background-repeat: no-repeat;
+        background-size: contain;
+        opacity: 0.15;
+        z-index: -1;
+    }
+    
+    .e1 {
+        width: 120px;
+        height: 120px;
+        top: 10%;
+        left: 5%;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230c4b33'%3E%3Cpath d='M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 3a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5z'/%3E%3C/svg%3E");
+        animation: float-slow 15s infinite ease-in-out;
+    }
+    
+    .e2 {
+        width: 150px;
+        height: 150px;
+        top: 60%;
+        left: 15%;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF9E00'%3E%3Cpath d='M17 4c2.21 0 4 1.79 4 4s-1.79 4-4 4h-1.8l-.5.3 2 6.9-1.8.6-2-6.9-.6-.3H9v6h-2V4h10zm0 2H9v4h8c1.1 0 2-.9 2-2s-.9-2-2-2z'/%3E%3C/svg%3E");
+        animation: float-slow 18s infinite ease-in-out reverse;
+    }
+    
+    .e3 {
+        width: 100px;
+        height: 100px;
+        top: 20%;
+        right: 10%;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230c4b33'%3E%3Cpath d='M12 3c4.97 0 9 2.69 9 6v6c0 3.31-4.03 6-9 6s-9-2.69-9-6V9c0-3.31 4.03-6 9-6zm0 2c-3.86 0-7 1.79-7 4v6c0 2.21 3.14 4 7 4s7-1.79 7-4V9c0-2.21-3.14-4-7-4zm3 5v3h-2v-3H9v2H7v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2h-2v-2h-4V10h4z'/%3E%3C/svg%3E");
+        animation: float-slow 20s infinite ease-in-out;
+    }
+    
+    .e4 {
+        width: 140px;
+        height: 140px;
+        bottom: 15%;
+        right: 5%;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF9E00'%3E%3Cpath d='M12 22a9 9 0 0 1-9-9c0-1.63.42-3.16 1.18-4.5L12 22zm6.82-13.5A9 9 0 0 0 3 13a9 9 0 0 0 9 9 9 9 0 0 0 9-9c0-1.63-.42-3.16-1.18-4.5z'/%3E%3C/svg%3E");
+        animation: float-slow 17s infinite ease-in-out reverse;
+    }
+    
+    @keyframes float-slow {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+        50% {
+            transform: translate(15px, 15px) rotate(5deg);
+        }
+        100% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+    }
+    
+    /* Logo Image Specific Styling */
+    .logo-img {
+        transition: transform 0.5s ease;
+        transform-origin: center;
+    }
+    
+    .logo-img:hover {
+        transform: scale(1.05);
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Animation Delay Classes */
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+    .delay-6 { animation-delay: 0.6s; }
+    .delay-7 { animation-delay: 0.7s; }
+    .delay-8 { animation-delay: 0.8s; }
+    .delay-9 { animation-delay: 0.9s; }
+    .delay-10 { animation-delay: 1s; }
+    .delay-11 { animation-delay: 1.1s; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .services {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        }
+        
+        .text-section, .image-section {
+            flex: 100%;
+        }
+    }
+    </style>
+</head>
+<body>
+    <!-- Enhanced Hero Section (Page 1) -->
+    <section class="page" id="page1">
+        <div class="container">
+            <div class="slides">
+                <div class="text-section">
+                    <h1>Kisan Mitra</h1>
+                    <p>Empowering Farmers, Connecting Markets, Ensuring Growth</p>
+                    <div class="buttons">
+                        <a href="FarmerRegistration.html" class="button">Join as a Farmer</a>
+                        <a href="BuyerRegistration.html" class="button">Join as a Buyer</a>
+                    </div>
+                </div>
+                <div class="image-section">
+                    <img src="KisanMitraLogo.png" alt="Kisan Mitra Logo" class="logo-img">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Animated background elements -->
+        <div class="bg-elements">
+            <div class="floating-element e1"></div>
+            <div class="floating-element e2"></div>
+            <div class="floating-element e3"></div>
+            <div class="floating-element e4"></div>
+        </div>
+    </section>
+
+    <!-- Enhanced Page 2 - Services Grid -->
+    <section class="page" id="page2">
+        <div class="services-container">
+            <div class="services-header">
+                <h1>Explore Our Farm Offerings</h1>
+                <p>Discover a wide variety of fresh, local and sustainable products direct from farmers</p>
+            </div>
+            
+            <div class="services">
+                <div class="service delay-1">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M22 7H2v1a7 7 0 0 0 7 7h6a7 7 0 0 0 7-7V7z"></path>
+                            <path d="M13 13v5a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-5"></path>
+                            <path d="M17 13v5a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-5"></path>
+                            <path d="M4.31 7l1.81-4.74A1 1 0 0 1 7 1.5h10a1 1 0 0 1 .93.76L19.7 7"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Fresh Vegetables</h2>
+                        <p>Organic greens, root crops, seasonal produce grown with sustainable practices.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-2">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17.5 6.5c.88 0 1.63-.61 1.83-1.47l.33-1.47H4.34l.33 1.47c.2.86.95 1.47 1.83 1.47h11"></path>
+                            <path d="M14 20l-2-8-2 8"></path>
+                            <path d="M13 16h-2"></path>
+                            <path d="M14 3c0 1-1 2-2 2s-2-1-2-2 1-2 2-2 2 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Fruits & Berries</h2>
+                        <p>Mangoes, bananas, berries, citrus, and more - harvested at peak ripeness.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-3">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M16 2c.28 0 .55.07.79.18C17.24 2.66 17 3.3 17 4a3 3 0 0 0 3 3c.7 0 1.34-.24 1.82-.7.11.24.18.5.18.79V8a2 2 0 0 1-2 2h-4v2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2v2a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-2H4a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h2v-2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h12z"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Grains & Pulses</h2>
+                        <p>Rice, wheat, millets, lentils, and chickpeas from traditional farming methods.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-4">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 22c4 0 7-2 7-5"></path>
+                            <path d="M9 17c4 0 7-2 7-5"></path>
+                            <path d="M9 12c4 0 7-2 7-5"></path>
+                            <path d="M9 7c4 0 7-2 7-5"></path>
+                            <path d="M9 22H8c-3 0-4-1.5-4-4V7c0-2.5 1-4 4-4h1"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Spices & Herbs</h2>
+                        <p>Fresh coriander, turmeric, ginger, and native spices grown with care.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-5">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 2h8"></path>
+                            <path d="M9 2v4"></path>
+                            <path d="M15 2v4"></path>
+                            <path d="M18 8H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2z"></path>
+                            <path d="M17 12a5 5 0 0 1-10 0"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Dairy Products</h2>
+                        <p>Milk, curd, paneer, and organic ghee from free-range, grass-fed animals.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-6">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 14V9a2 2 0 0 0-2-2h-1a2 2 0 0 1-2-2V3a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2a2 2 0 0 1-2 2H4a2 2 0 0 0-2 2v5"></path>
+                            <path d="M8 21h8"></path>
+                            <path d="M12 17v4"></path>
+                            <path d="M2 14h20"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Handmade Goods</h2>
+                        <p>Jaggery, pickles, papads, and rural delicacies made with traditional recipes.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-7">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2v3"></path>
+                            <path d="M12 19v3"></path>
+                            <path d="M4.93 4.93l2.12 2.12"></path>
+                            <path d="M16.95 16.95l2.12 2.12"></path>
+                            <path d="M2 12h3"></path>
+                            <path d="M19 12h3"></path>
+                            <path d="M4.93 19.07l2.12-2.12"></path>
+                            <path d="M16.95 7.05l2.12-2.12"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Plant Nursery</h2>
+                        <p>Saplings, decorative plants, and herbs for your garden or indoor spaces.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-8">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M2 9.5V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5.5"></path>
+                            <path d="M2 14.5V20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.5"></path>
+                            <path d="M2 12h20"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Organic Fertilizers</h2>
+                        <p>Compost, vermicompost, and green manure for sustainable gardening.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-9">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M11 12H3L1 13l10 8 10-8-2-1h-8z"></path>
+                            <path d="M11 9V3h10v6h-2"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Handcrafted Baskets</h2>
+                        <p>Eco-friendly packaging and utility baskets made from sustainable materials.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-10">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 11s5.8-2.3 6.3-6.2c0 0 1.1 5.9 8.2 6.2"></path>
+                            <path d="M5 11v6c0 2 1 5 6 5 5 0 6-4 6-5v-6"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Local Honey</h2>
+                        <p>Pure wild forest and farm-sourced honey collected using ethical methods.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+
+                <div class="service delay-11">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="m14 5-3 3 2 7 8-8-7-2Z"></path>
+                            <path d="m14 5-3 3-3 1-3 2 1 3 2 3 3 2 3 1 2-3-2-7Z"></path>
+                            <path d="M9.5 9.5 4 15l.5 5 5-4.5"></path>
+                        </svg>
+                    </div>
+                    <div class="service-content">
+                        <h2>Farm Tools</h2>
+                        <p>Locally crafted tools and equipment made by skilled rural artisans.</p>
+                        <a href="#" class="service-link">Learn more</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+<footer>
+    <p>&copy; 2024 Harvest Connect. All Rights Reserved.</p>
+  </footer>
+    <!-- Additional JS for animations -->
+    <script>
+        // Intersection Observer to trigger animations when elements come into view
+        document.addEventListener('DOMContentLoaded', function() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animationPlayState = 'running';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            // Observe all service cards
+            document.querySelectorAll('.service').forEach(service => {
+                service.style.animationPlayState = 'paused';
+                observer.observe(service);
+            });
+            
+            // Hover effects for service cards
+            document.querySelectorAll('.service').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

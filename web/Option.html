@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Role</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: #444;
+        }
+
+        .options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            
+        }
+
+        .option {
+            text-decoration: none;
+            color: #fff;
+            font-size: 1.5rem;
+            padding: 15px 30px;
+            border-radius: 8px;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .option.farmer {
+            background: linear-gradient(45deg, #fdbb2d, #b21f1f);
+        }
+
+        .option.buyer {
+            background: linear-gradient(45deg, #fdbb2d, #b21f1f);
+        }
+
+        .option:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+    </style> 
+</head>
+<body>
+    <div class="container">
+        <h1>Are you a Farmer or a Buyer?</h1>
+        <div class="options">
+            <a href="FarmerRegistration.html" class="option farmer">Farmer</a>
+            <a href="BuyerRegistration.html" class="option buyer">Buyer</a>
+        </div>
+    </div>
+</body>
+</html>
