@@ -3,72 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choose Your Role</title>
+    <title>Choose Your Role - KisanMitra</title>
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
-            height: 100vh;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            color: #333;
-            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
         }
 
         .container {
-            max-width: 600px;
-            padding: 40px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 1100px;
+            width: 100%;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
         }
 
         h1 {
-            font-size: 2rem;
-            margin-bottom: 30px;
-            color: #444;
+            font-size: 2.5rem;
+            color: #1a3a2e;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-top: 10px;
         }
 
         .options {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
         }
 
-        .option {
+        .option-card {
             text-decoration: none;
-            color: #fff;
-            font-size: 1.5rem;
-            padding: 15px 30px;
-            border-radius: 8px;
-            transition: transform 0.3s ease, background-color 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: white;
+            border-radius: 20px;
+            padding: 50px 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
         }
 
-        .option.farmer {
-            background: linear-gradient(45deg, #fdbb2d, #b21f1f);
+        .option-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
         }
 
-        .option.buyer {
-            background: linear-gradient(45deg, #fdbb2d, #b21f1f);
+        .option-card.farmer {
+            border-color: #4CAF50;
         }
 
-        .option:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
+        .option-card.farmer:hover {
+            background: #f1f8f4;
         }
-    </style> 
+
+        .option-card.buyer {
+            border-color: #FF9800;
+        }
+
+        .option-card.buyer:hover {
+            background: #fff8f0;
+        }
+
+        .icon-wrapper {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .option-card.farmer .icon-wrapper {
+            background: #4CAF50;
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .option-card.buyer .icon-wrapper {
+            background: #FF9800;
+            box-shadow: 0 8px 25px rgba(255, 152, 0, 0.3);
+        }
+
+        .icon {
+            font-size: 50px;
+        }
+
+        .option-title {
+            font-size: 1.8rem;
+            color: #1a3a2e;
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .option-description {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .features {
+            list-style: none;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .features li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 0.95rem;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .option-card.farmer .features li::before {
+            color: #4CAF50;
+        }
+
+        .option-card.buyer .features li::before {
+            color: #FF9800;
+        }
+
+        .cta-button {
+            display: block;
+            margin: 20px auto 0;
+            padding: 12px 35px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: fit-content;
+        }
+
+        .option-card.farmer .cta-button {
+            background: #4CAF50;
+        }
+
+        .option-card.buyer .cta-button {
+            background: #FF9800;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 25px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .options {
+                gap: 30px;
+            }
+
+            .option-card {
+                padding: 40px 25px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Are you a Farmer or a Buyer?</h1>
+        <div class="header">
+            <h1>Welcome to Kisan Mitra</h1>
+            <p class="subtitle">Join our community and start connecting today</p>
+        </div>
+
         <div class="options">
-            <a href="FarmerRegistration.html" class="option farmer">Farmer</a>
-            <a href="BuyerRegistration.html" class="option buyer">Buyer</a>
+            <a href="FarmerRegistration.html" class="option-card farmer">
+                <div class="icon-wrapper">
+                    <div class="icon">🌾</div>
+                </div>
+                <h2 class="option-title">I'm a Farmer</h2>
+                <p class="option-description">
+                    Sell your produce directly to buyers and get the best prices for your harvest
+                </p>
+                <ul class="features">
+                    <li>List your products easily</li>
+                    <li>Set your own prices</li>
+                    <li>Connect with verified buyers</li>
+                    <li>Track your sales in real-time</li>
+                </ul>
+                <span class="cta-button">Register as Farmer</span>
+            </a>
+
+            <a href="BuyerRegistration.html" class="option-card buyer">
+                <div class="icon-wrapper">
+                    <div class="icon">🛒</div>
+                </div>
+                <h2 class="option-title">I'm a Buyer</h2>
+                <p class="option-description">
+                    Source fresh produce directly from farmers at competitive prices
+                </p>
+                <ul class="features">
+                    <li>Browse quality products</li>
+                    <li>Compare prices easily</li>
+                    <li>Connect with local farmers</li>
+                    <li>Secure payment options</li>
+                </ul>
+                <span class="cta-button">Register as Buyer</span>
+            </a>
         </div>
     </div>
 </body>

@@ -1,242 +1,254 @@
-
+<%@ include file="SessionValidator.jsp" %>
 <%@ page import="db.DBConnector" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.util.*" %>
+<%
+    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.setHeader("Pragma", "no-cache");
+    response.setDateHeader("Expires", 0);
+    
+    String farmerEmail = (String) session.getAttribute("email");
+    
+    if (farmerEmail == null || farmerEmail.isEmpty()) {
+        response.sendRedirect("Login.jsp");
+        return;
+    }
+    
+    // Process delete request
+    String deleteId = request.getParameter("delete");
+    if (deleteId != null && !deleteId.isEmpty()) {
+        try {
+            Connection conn = DBConnector.getConnection();
+            PreparedStatement ps = conn.prepareStatement("DELETE FROM tradecreation WHERE id = ? AND farmer_email = ?");
+            ps.setInt(1, Integer.parseInt(deleteId));
+            ps.setString(2, farmerEmail);
+            int result = ps.executeUpdate();
+            if (result > 0) {
+                session.setAttribute("message", "Trade deleted successfully");
+                session.setAttribute("messageType", "success");
+            } else {
+                session.setAttribute("message", "Failed to delete trade");
+                session.setAttribute("messageType", "error");
+            }
+            ps.close();
+            conn.close();
+            response.sendRedirect("ShowTrades.jsp");
+            return;
+        } catch (Exception e) {
+            session.setAttribute("message", "Error: " + e.getMessage());
+            session.setAttribute("messageType", "error");
+            response.sendRedirect("ShowTrades.jsp");
+            return;
+        }
+    }
+    
+    // Process availability toggle request
+    String toggleId = request.getParameter("toggle");
+    String availabilityStatus = request.getParameter("status");
+    if (toggleId != null && !toggleId.isEmpty() && availabilityStatus != null) {
+        try {
+            Connection conn = DBConnector.getConnection();
+            PreparedStatement ps = conn.prepareStatement("UPDATE tradecreation SET available = ? WHERE id = ? AND farmer_email = ?");
+            ps.setBoolean(1, availabilityStatus.equals("true"));
+            ps.setInt(2, Integer.parseInt(toggleId));
+            ps.setString(3, farmerEmail);
+            int result = ps.executeUpdate();
+            if (result > 0) {
+                session.setAttribute("message", "Availability status updated");
+                session.setAttribute("messageType", "success");
+            } else {
+                session.setAttribute("message", "Failed to update availability");
+                session.setAttribute("messageType", "error");
+            }
+            ps.close();
+            conn.close();
+            response.sendRedirect("ShowTrades.jsp");
+            return;
+        } catch (Exception e) {
+            session.setAttribute("message", "Error: " + e.getMessage());
+            session.setAttribute("messageType", "error");
+            response.sendRedirect("ShowTrades.jsp");
+            return;
+        }
+    }
+    
+    // Get trades from database
+    List<Map<String, Object>> trades = new ArrayList<>();
+    Connection conn = null;
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+    try {
+        conn = DBConnector.getConnection();
+        String query = "SELECT id, commodity, category, origin, quantity, buyingprice, image, available FROM tradecreation WHERE farmer_email = ? ORDER BY created_at DESC";
+        ps = conn.prepareStatement(query);
+        ps.setString(1, farmerEmail);
+        rs = ps.executeQuery();
+        
+        while (rs.next()) {
+            Map<String, Object> trade = new HashMap<>();
+            trade.put("id", rs.getInt("id"));
+            trade.put("commodity", rs.getString("commodity"));
+            trade.put("category", rs.getString("category"));
+            trade.put("origin", rs.getString("origin"));
+            trade.put("quantity", rs.getInt("quantity"));
+            trade.put("buyingprice", rs.getDouble("buyingprice"));
+            trade.put("available", rs.getBoolean("available"));
+            
+            byte[] imageBytes = rs.getBytes("image");
+            String base64Image = "";
+            if (imageBytes != null && imageBytes.length > 0) {
+                base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
+            }
+            trade.put("base64Image", base64Image);
+            trades.add(trade);
+        }
+    } catch (SQLException e) {
+        out.println("<p style='color:red;'>SQL Error: " + e.getMessage() + "</p>");
+    } finally {
+        try {
+            if (rs != null) rs.close();
+            if (ps != null) ps.close();
+            if (conn != null) conn.close();
+        } catch (SQLException e) {
+            out.println("<p style='color:red;'>Error closing connection: " + e.getMessage() + "</p>");
+        }
+    }
+%>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmer's Marketplace - Crop Listings</title>
+    <title>My Listings - Kisan Mitra</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2e7d32;
-            --secondary-color: #81c784;
-            --accent-color: #f9a825;
-            --danger-color: #f44336;
-            --text-color: #333;
-            --light-bg: #f5f5f5;
-            --white: #fff;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --card-radius: 12px;
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding: 0;
-            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            color:white;
-            padding: 20px 0;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            animation: fadeInDown 1s ease-out;
-        }
-        
-        header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-top: 10px;
-            animation: fadeInUp 1s ease-out;
-        }
-        
-        .header-graphic {
-            position: absolute;
-            width: 100%;
-            height: 100%;
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            position: sticky;
             top: 0;
-            left: 0;
-            overflow: hidden;
-            z-index: 0;
-        }
-        
-        .header-graphic svg {
-            position: absolute;
-            bottom: -20px;
-            left: 0;
-            width: 100%;
-            height: auto;
-            opacity: 0.1;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
         
         .header-content {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-        
-        .card {
-            background: var(--white);
-            border-radius: var(--card-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: fadeIn 0.6s ease-out forwards;
-            opacity: 0;
-            transform: translateY(20px);
-            position: relative;
-        }
-        
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-        }
-        
-        .card-image {
-            height: 180px;
-            overflow: hidden;
-            position: relative;
-            background-color: #f0f0f0;
-        }
-        
-        .card-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        
-        .card:hover .card-image img {
-            transform: scale(1.1);
-        }
-        
-        .no-image {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            color: #aaa;
-            font-size: 3rem;
-        }
-        
-        .card-content {
-            padding: 20px;
-        }
-        
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: var(--primary-color);
-        }
-        
-        .card-origin {
-            color: #666;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .card-origin i {
-            margin-right: 5px;
-            color: var(--accent-color);
-        }
-        
-        .card-details {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 18px 30px;
             display: flex;
             justify-content: space-between;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        
-        .detail-item {
-            display: flex;
-            flex-direction: column;
             align-items: center;
         }
         
-        .detail-label {
-            font-size: 0.8rem;
-            color: #888;
-        }
-        
-        .detail-value {
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: var(--text-color);
-        }
-        
-        .badge {
-            background-color: var(--accent-color);
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
             color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .badge-unavailable {
-            background-color: #aaa;
-        }
-        
-        .filters {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 15px 20px;
-            background: var(--white);
-            border-radius: var(--card-radius);
-            box-shadow: var(--shadow);
-            animation: fadeIn 0.6s ease-out;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .nav-item {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
+        
+        .section-header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+        }
+        
+        .section-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+        
+        /* Search and Filters */
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
         }
         
         .search-container {
             flex: 1;
-            max-width: 400px;
+            min-width: 250px;
             position: relative;
         }
         
         .search-container input {
             width: 100%;
-            padding: 12px 20px;
-            padding-left: 40px;
-            border: 1px solid #ddd;
-            border-radius: 30px;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
+            padding: 12px 20px 12px 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1rem;
+            transition: all 0.3s;
         }
         
         .search-container input:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
         .search-container i {
@@ -244,183 +256,340 @@
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #888;
+            color: #999;
         }
         
-        .filter-options {
+        .filter-buttons {
             display: flex;
             gap: 10px;
         }
         
         .filter-btn {
-            padding: 8px 15px;
-            background: var(--light-bg);
-            border: none;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 25px;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .filter-btn:hover, .filter-btn.active {
-            background: var(--primary-color);
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        
+        /* Product Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        
+        .product-image-wrapper {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .product-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+        
+        .product-card:hover .product-image-wrapper img {
+            transform: scale(1.1);
+        }
+        
+        .no-image {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(0,0,0,0.1);
+            font-size: 4rem;
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .status-available {
+            background: #00b894;
             color: white;
         }
         
-        .filter-btn i {
-            margin-right: 5px;
+        .status-unavailable {
+            background: #ff7675;
+            color: white;
         }
         
-        .placeholder {
-            min-height: 400px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #aaa;
-            font-size: 1.2rem;
+        .product-details {
+            padding: 20px;
         }
         
-        footer {
-            text-align: center;
-            padding: 30px 0;
-            margin-top: 50px;
-            color: #777;
-            font-size: 0.9rem;
+        .product-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
-        /* Card Actions */
-        .card-actions {
+        .product-category {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .product-meta {
             display: flex;
             justify-content: space-between;
-            padding: 10px 20px;
-            background-color: #f9f9f9;
-            border-top: 1px solid #eee;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: #636e72;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .meta-item i {
+            color: #667eea;
+        }
+        
+        .product-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 2px solid #f1f3f5;
+            margin-top: 15px;
+        }
+        
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
         }
         
         .btn {
-            padding: 8px 15px;
+            flex: 1;
+            padding: 10px;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 8px;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
             font-size: 0.9rem;
-            transition: all 0.3s ease;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
-        }
-        
-        .btn i {
-            margin-right: 5px;
-        }
-        
-        .btn-danger {
-            background-color: var(--danger-color);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #d32f2f;
+            gap: 8px;
         }
         
         .btn-toggle {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
         
         .btn-toggle:hover {
-            background-color: #1b5e20;
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
         
-        .btn-toggle.unavailable {
-            background-color: #aaa;
+        .btn-delete {
+            background: #ff7675;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.3);
         }
         
-        /* Modal Styles */
+        .btn-delete:hover {
+            background: #d63031;
+            transform: scale(1.05);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            color: white;
+            grid-column: 1 / -1;
+        }
+        
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .empty-state a {
+            color: #ffd93d;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        
+        /* Alert Message */
+        .alert-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            animation: slideDown 0.5s ease-out;
+        }
+        
+        .alert-success {
+            background: #00b894;
+        }
+        
+        .alert-error {
+            background: #ff7675;
+        }
+        
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 1500;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0,0,0,0.5);
             animation: fadeIn 0.3s ease-out;
         }
         
         .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            width: 400px;
-            max-width: 90%;
-            animation: slideDown 0.3s ease-out;
+            background: white;
+            margin: 25% auto;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             text-align: center;
+            animation: slideDown 0.3s ease-out;
         }
         
         .modal-title {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3436;
             margin-bottom: 15px;
-            color: #333;
         }
         
         .modal-message {
+            font-size: 1rem;
+            color: #636e72;
             margin-bottom: 30px;
-            color: #555;
-            font-size: 1.1rem;
+            line-height: 1.6;
         }
         
         .modal-buttons {
             display: flex;
-            justify-content: center;
             gap: 15px;
         }
         
-        /* Loading indicator */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            z-index: 1001;
-            justify-content: center;
-            align-items: center;
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
         }
         
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--primary-color);
-            border-top: 5px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
+        
+        .btn-confirm {
+            background: #ff7675;
+            color: white;
+        }
+        
+        .btn-confirm:hover {
+            background: #d63031;
         }
         
         /* Animations */
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
-        @keyframes fadeInDown {
+        @keyframes slideDown {
             from {
                 opacity: 0;
                 transform: translateY(-20px);
@@ -431,191 +600,101 @@
             }
         }
         
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Responsiveness */
         @media (max-width: 768px) {
-            .grid-container {
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            }
-            
-            .filters {
+            .header-content {
                 flex-direction: column;
                 gap: 15px;
             }
             
-            .search-container {
-                max-width: 100%;
+            .nav-links {
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: center;
             }
             
-            header h1 {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+            
+            .section-title {
                 font-size: 2rem;
             }
             
-            .card-actions {
+            .filters {
                 flex-direction: column;
-                gap: 10px;
+                align-items: stretch;
             }
             
-            .btn {
+            .filter-buttons {
                 width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
             }
         }
         
         @media (max-width: 480px) {
-            .grid-container {
+            .products-grid {
                 grid-template-columns: 1fr;
-            }
-            
-            .filter-options {
-                width: 100%;
-                overflow-x: auto;
-                padding-bottom: 10px;
-            }
-            
-            .card-content {
-                padding: 15px;
             }
         }
     </style>
 </head>
 <body>
-    <%
-        // Process delete request
-        String deleteId = request.getParameter("delete");
-        if (deleteId != null && !deleteId.isEmpty()) {
-            try {
-                Connection conn = DBConnector.getConnection();
-                PreparedStatement ps = conn.prepareStatement("DELETE FROM tradecreation WHERE id = ?");
-                ps.setInt(1, Integer.parseInt(deleteId));
-                int result = ps.executeUpdate();
-                if (result > 0) {
-                    // Success message will be shown
-                    session.setAttribute("message", "Trade deleted successfully");
-                    session.setAttribute("messageType", "success");
-                } else {
-                    // Error message
-                    session.setAttribute("message", "Failed to delete trade");
-                    session.setAttribute("messageType", "error");
-                }
-                response.sendRedirect("ShowTrades.jsp");
-                return;
-            } catch (Exception e) {
-                // Handle error
-                session.setAttribute("message", "Error: " + e.getMessage());
-                session.setAttribute("messageType", "error");
-                response.sendRedirect("ShowTrades.jsp");
-                return;
-            }
-        }
-        
-        // Process availability toggle request
-        String toggleId = request.getParameter("toggle");
-        String availabilityStatus = request.getParameter("status");
-        if (toggleId != null && !toggleId.isEmpty() && availabilityStatus != null) {
-            try {
-                Connection conn = DBConnector.getConnection();
-                PreparedStatement ps = conn.prepareStatement("UPDATE tradecreation SET available = ? WHERE id = ?");
-                ps.setBoolean(1, availabilityStatus.equals("true"));
-                ps.setInt(2, Integer.parseInt(toggleId));
-                int result = ps.executeUpdate();
-                if (result > 0) {
-                    // Success message
-                    session.setAttribute("message", "Availability status updated");
-                    session.setAttribute("messageType", "success");
-                } else {
-                    // Error message
-                    session.setAttribute("message", "Failed to update availability");
-                    session.setAttribute("messageType", "error");
-                }
-                response.sendRedirect("ShowTrades.jsp");
-                return;
-            } catch (Exception e) {
-                // Handle error
-                session.setAttribute("message", "Error: " + e.getMessage());
-                session.setAttribute("messageType", "error");
-                response.sendRedirect("ShowTrades.jsp");
-                return;
-            }
-        }
-        
-        // Get trades from database - note that we need to add available column to the query
-        List<Map<String, Object>> trades = new ArrayList<>();
-        try {
-            Statement st = DBConnector.getStatement();
-            // Note: if available column doesn't exist yet, you'll need to add it to your database
-            String query = "SELECT id, commodity, origin, quantity, buyingprice, image, available FROM tradecreation ORDER BY id DESC";
-            ResultSet rs = st.executeQuery(query);
-            while (rs.next()) {
-                Map<String, Object> trade = new HashMap<>();
-                trade.put("id", rs.getInt("id"));
-                trade.put("commodity", rs.getString("commodity"));
-                trade.put("origin", rs.getString("origin"));
-                trade.put("quantity", rs.getInt("quantity"));
-                trade.put("buyingprice", rs.getDouble("buyingprice"));
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                Kisan Mitra
+            </div>
+            <div class="nav-links">
+                <a href="FarmerDashboard.jsp" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="UploadTrade.jsp" class="nav-item">
+                    <i class="fas fa-upload"></i>
+                    Upload Trade
+                </a>
                 
-                // Attempt to get availability status - if the column doesn't exist yet, set to true by default
-                boolean isAvailable = true;
-                try {
-                    isAvailable = rs.getBoolean("available");
-                } catch (SQLException e) {
-                    // Column might not exist yet - we'll assume all items are available
-                }
-                trade.put("available", isAvailable);
+                <a href="FarmerSales.jsp" class="nav-item">
+                <i class="fas fa-dollar-sign"></i>
+                 Sales
+                </a>
                 
-                byte[] imageBytes = rs.getBytes("image");
-                String base64Image = "";
-                if (imageBytes != null && imageBytes.length > 0) {
-                    base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
-                }
-                trade.put("base64Image", base64Image);
-                trades.add(trade);
-            }
-        } catch (SQLException e) {
-            out.println("<p style='color:red;'>SQL Error: " + e.getMessage() + "</p>");
-        }
-    %>
+                <a href="FarmerProfile.jsp" class="nav-item">
+                    <i class="fas fa-user"></i>
+                    Profile
+                </a>
+<!--                <a href="Logout.jsp" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>-->
+            </div>
+        </div>
+    </div>
 
-    <!-- Display messages if any -->
+    <!-- Alert Message -->
     <% 
         String message = (String) session.getAttribute("message");
         String messageType = (String) session.getAttribute("messageType");
         if (message != null && !message.isEmpty()) {
-            String alertColor = messageType.equals("success") ? "#4caf50" : "#f44336";
+            String alertClass = messageType.equals("success") ? "alert-success" : "alert-error";
     %>
-    <div id="alertMessage" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
-         background-color: <%= alertColor %>; color: white; padding: 15px 20px; 
-         border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;
-         animation: fadeInDown 0.5s ease-out;">
+    <div class="alert-message <%= alertClass %>">
         <%= message %>
     </div>
     <script>
         setTimeout(function() {
-            document.getElementById('alertMessage').style.opacity = '0';
-            document.getElementById('alertMessage').style.transition = 'opacity 0.5s ease';
-            setTimeout(function() {
-                document.getElementById('alertMessage').style.display = 'none';
-            }, 500);
+            const alert = document.querySelector('.alert-message');
+            if (alert) {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s ease';
+                setTimeout(function() {
+                    alert.remove();
+                }, 500);
+            }
         }, 3000);
     </script>
     <% 
@@ -624,47 +703,48 @@
     } 
     %>
 
-    <header>
-        <div class="header-graphic">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-                <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,224C672,213,768,171,864,165.3C960,160,1056,192,1152,202.7C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-            </svg>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="section-header">
+            <h1 class="section-title">My Listings</h1>
+            <p class="section-subtitle">Manage your crop trades</p>
         </div>
-        <div class="header-content">
-            <h1><i class="fas fa-leaf"></i> Farmer's Marketplace</h1>
-            <p>Manage your crop listings</p>
-        </div>
-    </header>
 
-    <div class="container">
+        <!-- Search and Filters -->
         <div class="filters">
             <div class="search-container">
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchInput" placeholder="Search commodities...">
             </div>
-            
-            <div class="filter-options">
-                <button class="filter-btn active" data-filter="all"><i class="fas fa-border-all"></i> All</button>
-                <button class="filter-btn" data-filter="available"><i class="fas fa-check-circle"></i> Available</button>
-                <button class="filter-btn" data-filter="unavailable"><i class="fas fa-times-circle"></i> Unavailable</button>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">
+                    <i class="fas fa-border-all"></i> All
+                </button>
+                <button class="filter-btn" data-filter="available">
+                    <i class="fas fa-check-circle"></i> Available
+                </button>
+                <button class="filter-btn" data-filter="unavailable">
+                    <i class="fas fa-times-circle"></i> Unavailable
+                </button>
             </div>
         </div>
 
-        <div class="grid-container">
+        <!-- Products Grid -->
+        <div class="products-grid">
             <% 
-                int delay = 0;
-                for (Map<String, Object> trade : trades) {
-                    String base64Image = (String) trade.get("base64Image");
-                    String commodity = (String) trade.get("commodity");
-                    String origin = (String) trade.get("origin");
-                    int quantity = (Integer) trade.get("quantity");
-                    double price = (Double) trade.get("buyingprice");
-                    int id = (Integer) trade.get("id");
-                    boolean isAvailable = (Boolean) trade.get("available");
-                    delay += 100;
+                if (!trades.isEmpty()) {
+                    for (Map<String, Object> trade : trades) {
+                        String base64Image = (String) trade.get("base64Image");
+                        String commodity = (String) trade.get("commodity");
+                        String category = (String) trade.get("category");
+                        String origin = (String) trade.get("origin");
+                        int quantity = (Integer) trade.get("quantity");
+                        double price = (Double) trade.get("buyingprice");
+                        int id = (Integer) trade.get("id");
+                        boolean isAvailable = (Boolean) trade.get("available");
             %>
-            <div class="card" style="animation-delay: <%= delay %>ms;" data-available="<%= isAvailable %>">
-                <div class="card-image">
+            <div class="product-card" data-available="<%= isAvailable %>">
+                <div class="product-image-wrapper">
                     <% if (!base64Image.isEmpty()) { %>
                         <img src="data:image/jpeg;base64,<%= base64Image %>" alt="<%= commodity %>" loading="lazy">
                     <% } else { %>
@@ -672,43 +752,48 @@
                             <i class="fas fa-seedling"></i>
                         </div>
                     <% } %>
+                    <span class="status-badge <%= isAvailable ? "status-available" : "status-unavailable" %>">
+                        <%= isAvailable ? "Available" : "Unavailable" %>
+                    </span>
                 </div>
-                <div class="card-content">
-                    <div class="card-title"><%= commodity %></div>
-                    <div class="card-origin">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <%= origin %>
-                    </div>
-                    <div class="badge <%= isAvailable ? "" : "badge-unavailable" %>">
-                        <%= isAvailable ? "Available Now" : "Currently Unavailable" %>
-                    </div>
-                    <div class="card-details">
-                        <div class="detail-item">
-                            <div class="detail-label">QUANTITY</div>
-                            <div class="detail-value"><%= quantity %> MT</div>
+                <div class="product-details">
+                    <div class="product-name"><%= commodity %></div>
+                    <span class="product-category"><%= category %></span>
+                    
+                    <div class="product-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <%= origin %>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">PRICE</div>
-                            <div class="detail-value">$<%= String.format("%,.2f", price) %></div>
+                        <div class="meta-item">
+                            <i class="fas fa-box"></i>
+                            <%= quantity %> Kg
                         </div>
                     </div>
-                </div>
-                <div class="card-actions">
-                    <button class="btn btn-toggle <%= isAvailable ? "" : "unavailable" %>" 
-                            onclick="toggleAvailability(<%= id %>, <%= !isAvailable %>)">
-                        <i class="fas fa-<%= isAvailable ? "toggle-on" : "toggle-off" %>"></i>
-                        <%= isAvailable ? "Mark Unavailable" : "Mark Available" %>
-                    </button>
-                    <button class="btn btn-danger" onclick="confirmDelete(<%= id %>, '<%= commodity %>')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
+                    
+                    <div class="product-footer">
+                        <div class="product-price">&#8377;<%= String.format("%,.0f", price) %></div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-toggle" onclick="toggleAvailability(<%= id %>, <%= !isAvailable %>)">
+                            <i class="fas fa-<%= isAvailable ? "toggle-on" : "toggle-off" %>"></i>
+                            <%= isAvailable ? "Unavailable" : "Available" %>
+                        </button>
+                        <button class="btn btn-delete" onclick="confirmDelete(<%= id %>, '<%= commodity %>')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
                 </div>
             </div>
-            <% } %>
-            
-            <% if (trades.isEmpty()) { %>
-            <div class="placeholder">
-                <p>No crop listings available at the moment.</p>
+            <% 
+                    }
+                } else {
+            %>
+            <div class="empty-state">
+                <i class="fas fa-seedling"></i>
+                <h3>No Listings Yet</h3>
+                <p>Create your first trade to get started - <a href="UploadTrade.jsp">Add Trade</a></p>
             </div>
             <% } %>
         </div>
@@ -720,56 +805,41 @@
             <div class="modal-title">Confirm Deletion</div>
             <div class="modal-message">Are you sure you want to delete <span id="deleteItemName"></span>?</div>
             <div class="modal-buttons">
-                <button class="btn" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-confirm" id="confirmDeleteBtn">Delete</button>
             </div>
         </div>
     </div>
-    
-    <!-- Loading overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-    </div>
 
-    <footer>
-        <p>&copy; <%= new java.util.Date().getYear() + 1900 %> Farmer's Marketplace. Supporting local farmers and sustainable agriculture.</p>
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // Search functionality
-            $("#searchInput").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
-                $(".card").filter(function() {
-                    var matches = $(this).text().toLowerCase().indexOf(value) > -1;
-                    $(this).toggle(matches);
-                });
-            });
-            
-            // Filter buttons
-            $(".filter-btn").click(function() {
-                $(".filter-btn").removeClass("active");
-                $(this).addClass("active");
-                
-                var filter = $(this).data("filter");
-                if (filter === "all") {
-                    $(".card").show();
-                } else if (filter === "available") {
-                    $(".card").hide();
-                    $(".card[data-available='true']").show();
-                } else if (filter === "unavailable") {
-                    $(".card").hide();
-                    $(".card[data-available='false']").show();
-                }
-            });
-            
-            // Apply random animation delays for a staggered effect
-            $(".card").each(function(index) {
-                $(this).css("animation-delay", (index * 100) + "ms");
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const value = this.value.toLowerCase();
+            document.querySelectorAll('.product-card').forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(value) ? '' : 'none';
             });
         });
-        
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filter = this.dataset.filter;
+                document.querySelectorAll('.product-card').forEach(card => {
+                    if (filter === 'all') {
+                        card.style.display = '';
+                    } else if (filter === 'available') {
+                        card.style.display = card.dataset.available === 'true' ? '' : 'none';
+                    } else if (filter === 'unavailable') {
+                        card.style.display = card.dataset.available === 'false' ? '' : 'none';
+                    }
+                });
+            });
+        });
+
         // Delete confirmation
         function confirmDelete(id, itemName) {
             document.getElementById('deleteItemName').textContent = itemName;
@@ -778,29 +848,23 @@
             };
             document.getElementById('deleteModal').style.display = 'block';
         }
-        
+
         function closeModal() {
             document.getElementById('deleteModal').style.display = 'none';
         }
-        
+
         function deleteTrade(id) {
-            showLoading();
             window.location.href = 'ShowTrades.jsp?delete=' + id;
         }
-        
+
         function toggleAvailability(id, newStatus) {
-            showLoading();
             window.location.href = 'ShowTrades.jsp?toggle=' + id + '&status=' + newStatus;
         }
-        
-        function showLoading() {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-        }
-        
-        // Close modal if clicking outside of it
+
+        // Close modal when clicking outside
         window.onclick = function(event) {
-            var modal = document.getElementById('deleteModal');
-            if (event.target == modal) {
+            const modal = document.getElementById('deleteModal');
+            if (event.target === modal) {
                 closeModal();
             }
         }

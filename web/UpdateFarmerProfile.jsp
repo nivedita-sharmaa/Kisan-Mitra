@@ -2,37 +2,47 @@
 <%@page import="java.sql.Statement"%>
 <%@page import="java.sql.ResultSet"%>
 <%@page import="java.sql.SQLException"%>
+<%@page import="java.sql.Connection"%>
+<%@page import="java.sql.PreparedStatement"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
 <%
+    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.setHeader("Pragma", "no-cache");
+    response.setDateHeader("Expires", 0);
+    
     String emailSession = (String) session.getAttribute("email");
     if (emailSession == null) {
-        response.sendRedirect("login.jsp");
+        response.sendRedirect("Login.jsp");
         return;
     }
 
     String fname = "", lname = "", gender = "", cropgrown = "";
-    String farmsize = "", mobile = "", email = "", password = "", street = "", city = "", state = "", pin = "", country = "";
+    String farmsize = "", mobile = "", email = "", street = "", city = "", state = "", pin = "", country = "";
 
     try {
-        Statement st = DBConnector.getStatement();
-        String query = "SELECT * FROM farmerregistration WHERE email='" + emailSession + "'";
-        ResultSet rs = st.executeQuery(query);
+        Connection conn = DBConnector.getConnection();
+        String query = "SELECT fname, lname, gender, cropGrown, farmSize, mobile, email, street, city, state, pin, country FROM farmerregistration WHERE email = ?";
+        PreparedStatement ps = conn.prepareStatement(query);
+        ps.setString(1, emailSession);
+        ResultSet rs = ps.executeQuery();
+        
         if (rs.next()) {
-            fname = rs.getString("fname");
-            lname = rs.getString("lname");
-            gender = rs.getString("gender");
-            cropgrown = rs.getString("cropGrown");
-            farmsize = rs.getString("farmSize");
-            mobile = rs.getString("mobile");
-            email = rs.getString("email");
-            password = rs.getString("password");
-            street = rs.getString("street");
-            city = rs.getString("city");
-            state = rs.getString("state");
-            pin = rs.getString("pin");
-            country = rs.getString("country");
+            fname = rs.getString("fname") != null ? rs.getString("fname") : "";
+            lname = rs.getString("lname") != null ? rs.getString("lname") : "";
+            gender = rs.getString("gender") != null ? rs.getString("gender") : "";
+            cropgrown = rs.getString("cropGrown") != null ? rs.getString("cropGrown") : "";
+            farmsize = rs.getString("farmSize") != null ? rs.getString("farmSize") : "";
+            mobile = rs.getString("mobile") != null ? rs.getString("mobile") : "";
+            email = rs.getString("email") != null ? rs.getString("email") : "";
+            street = rs.getString("street") != null ? rs.getString("street") : "";
+            city = rs.getString("city") != null ? rs.getString("city") : "";
+            state = rs.getString("state") != null ? rs.getString("state") : "";
+            pin = rs.getString("pin") != null ? rs.getString("pin") : "";
+            country = rs.getString("country") != null ? rs.getString("country") : "";
         }
+        ps.close();
+        conn.close();
     } catch (SQLException e) {
         e.printStackTrace();
     }
@@ -42,175 +52,396 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Update Farmer Profile</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <title>Update Farmer Profile - Kisan Mitra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: #f3f4f6;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
         }
 
         .container {
-            max-width: 800px;
-            margin: 40px auto;
-            background: #ffffff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            animation: slideUp 0.8s ease;
         }
 
-        h1 {
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
             text-align: center;
-            margin-bottom: 30px;
-            color: #2c3e50;
+        }
+
+        .header h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            margin-bottom: 20px;
         }
 
         label {
-            margin-bottom: 6px;
-            font-weight: bold;
-            color: #34495e;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        input, select {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
+        label i {
+            color: #7cb342;
+            font-size: 1.1rem;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        select {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #7cb342;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(124, 179, 66, 0.1);
         }
 
         input[readonly] {
-            background-color: #e9ecef;
+            background: #f5f5f5;
             cursor: not-allowed;
+            color: #999;
         }
 
-        .form-actions {
-            display: flex;
-            justify-content: space-between;
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #2d5016;
             margin-top: 30px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #7cb342;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #7cb342;
+            font-size: 1.5rem;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #f1f3f5;
         }
 
         button {
-            padding: 12px 25px;
-            font-size: 16px;
+            padding: 13px 25px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        button[type="submit"] {
-            background-color: #27ae60;
-            color: #fff;
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
 
-        button[type="submit"]:hover {
-            background-color: #219150;
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(124, 179, 66, 0.3);
         }
 
-        button[type="button"] {
-            background-color: #bdc3c7;
-            color: #2c3e50;
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
         }
 
-        button[type="button"]:hover {
-            background-color: #95a5a6;
+        .btn-cancel:hover {
+            background: #d0d0d0;
+            transform: translateY(-2px);
         }
 
-        @media (max-width: 600px) {
-            .form-actions {
-                flex-direction: column;
-                gap: 10px;
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
             }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-container {
+                padding: 25px;
+            }
+
+            .header h2 {
+                font-size: 1.5rem;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .session-check {
+            display: none;
         }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1><i class="fas fa-user-edit"></i> Update Your Profile</h1>
-
-    <form action="UpdateFarmerProfile" method="post">
-        <div class="form-group">
-            <label for="first-name">First Name</label>
-            <input type="text" name="first-name" id="first-name" value="<%= fname %>" required />
+    <div class="container">
+        <div class="header">
+            <h2>
+                <i class="fas fa-user-edit"></i> Update Your Farmer Profile
+            </h2>
+            <p>Manage your farm information and details</p>
         </div>
 
-        <div class="form-group">
-            <label for="last-name">Last Name</label>
-            <input type="text" name="last-name" id="last-name" value="<%= lname %>" required />
-        </div>
+        <div class="form-container">
+            <form action="UpdateFarmerProfile" method="post">
+                <!-- Personal Information Section -->
+                <div class="section-title">
+                    <i class="fas fa-user"></i> Personal Information
+                </div>
 
-        <div class="form-group">
-            <label for="gender">Gender</label>
-            <select name="gender" id="gender" required>
-                <option value="male" <%= "male".equalsIgnoreCase(gender) ? "selected" : "" %>>Male</option>
-                <option value="female" <%= "female".equalsIgnoreCase(gender) ? "selected" : "" %>>Female</option>
-                <option value="other" <%= "other".equalsIgnoreCase(gender) ? "selected" : "" %>>Other</option>
-            </select>
-        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="first-name">
+                            <i class="fas fa-user"></i> First Name
+                        </label>
+                        <input type="text" id="first-name" name="first-name" value="<%= fname %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last-name">
+                            <i class="fas fa-user"></i> Last Name
+                        </label>
+                        <input type="text" id="last-name" name="last-name" value="<%= lname %>" required>
+                    </div>
+                </div>
 
-        <div class="form-group">
-            <label for="crop-grown">Crop Grown</label>
-            <input type="text" name="crop-grown" id="crop-grown" value="<%= cropgrown %>" required />
-        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gender">
+                            <i class="fas fa-venus-mars"></i> Gender
+                        </label>
+                        <select id="gender" name="gender" required>
+                            <option value="">-- Select --</option>
+                            <option value="Male" <%= "Male".equalsIgnoreCase(gender) ? "selected" : "" %>>Male</option>
+                            <option value="Female" <%= "Female".equalsIgnoreCase(gender) ? "selected" : "" %>>Female</option>
+                            <option value="Other" <%= "Other".equalsIgnoreCase(gender) ? "selected" : "" %>>Other</option>
+                        </select>
+                    </div>
+                </div>
 
-        <div class="form-group">
-            <label for="farmsize">Farm Size</label>
-            <input type="text" name="farmsize" id="farmsize" value="<%= farmsize %>" required />
-        </div>
+                <!-- Farm Information Section -->
+                <div class="section-title">
+                    <i class="fas fa-leaf"></i> Farm Information
+                </div>
 
-        <div class="form-group">
-            <label for="mobile">Mobile</label>
-            <input type="tel" name="mobile" id="mobile" value="<%= mobile %>" required />
-        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="crop-grown">
+                            <i class="fas fa-seedling"></i> Crops Grown
+                        </label>
+                        <input type="text" id="crop-grown" name="crop-grown" value="<%= cropgrown %>" placeholder="e.g. Wheat, Rice, Cotton" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="farmsize">
+                            <i class="fas fa-expand"></i> Farm Size (Hectares)
+                        </label>
+                        <input type="text" id="farmsize" name="farmsize" value="<%= farmsize %>" placeholder="e.g. 5.5 ha" required>
+                    </div>
+                </div>
 
-        <div class="form-group">
-            <label for="email">Email (cannot change)</label>
-            <input type="email" name="email" id="email" value="<%= email %>" readonly />
-        </div>
-         
-        
-        
-        <div class="form-group">
-            <label for="street">Street Address</label>
-            <input type="text" name="street" id="street" value="<%= street %>" required />
-        </div>
+                <!-- Contact Information Section -->
+                <div class="section-title">
+                    <i class="fas fa-phone"></i> Contact Information
+                </div>
 
-        <div class="form-group">
-            <label for="city">City</label>
-            <input type="text" name="city" id="city" value="<%= city %>" required />
-        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i> Email (Cannot Change)
+                        </label>
+                        <input type="email" id="email" name="email" value="<%= email %>" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="mobile">
+                            <i class="fas fa-mobile-alt"></i> Mobile Number
+                        </label>
+                        <input type="tel" id="mobile" name="mobile" value="<%= mobile %>" required>
+                    </div>
+                </div>
 
-        <div class="form-group">
-            <label for="state">State</label>
-            <input type="text" name="state" id="state" value="<%= state %>" required />
-        </div>
+                <!-- Address Information Section -->
+                <div class="section-title">
+                    <i class="fas fa-map-marker-alt"></i> Address Information
+                </div>
 
-        <div class="form-group">
-            <label for="postal">Postal Code</label>
-            <input type="text" name="postal" id="postal" value="<%= pin %>" required />
-        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="street">
+                            <i class="fas fa-road"></i> Street Address
+                        </label>
+                        <input type="text" id="street" name="street" value="<%= street %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="city">
+                            <i class="fas fa-city"></i> City
+                        </label>
+                        <input type="text" id="city" name="city" value="<%= city %>" required>
+                    </div>
+                </div>
 
-        <div class="form-group">
-            <label for="country">Country</label>
-            <input type="text" name="country" id="country" value="<%= country %>" required />
-        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="state">
+                            <i class="fas fa-flag"></i> State
+                        </label>
+                        <input type="text" id="state" name="state" value="<%= state %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="postal">
+                            <i class="fas fa-mailbox"></i> Postal Code
+                        </label>
+                        <input type="text" id="postal" name="postal" value="<%= pin %>" required>
+                    </div>
+                </div>
 
-        <div class="form-actions">
-            <button type="submit"><i class="fas fa-save"></i> Update Profile</button>
-            <button type="button" onclick="window.location.href='FarmerProfile.html';"><i class="fas fa-arrow-left"></i> Cancel</button>
-        </div>
-    </form>
-</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="country">
+                            <i class="fas fa-globe"></i> Country
+                        </label>
+                        <input type="text" id="country" name="country" value="<%= country %>" required>
+                    </div>
+                </div>
 
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                    <button type="button" class="btn-cancel" onclick="window.location.href='FarmerProfile.jsp';">
+                        <i class="fas fa-times-circle"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SESSION CHECK SCRIPT -->
+    <script>
+        var sessionCheckInterval = setInterval(function() {
+            fetch('CheckSession.jsp')
+                .then(response => {
+                    if (response.status === 401) {
+                        clearInterval(sessionCheckInterval);
+                        window.location.href = 'Login.jsp';
+                    }
+                });
+        }, 3000);
+    </script>
 </body>
 </html>

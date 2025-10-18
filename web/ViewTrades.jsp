@@ -1,648 +1,645 @@
+<%@ include file="SessionValidator.jsp" %>
 <%@ page import="db.DBConnector" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.util.*" %>
+
+<%
+    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.setHeader("Pragma", "no-cache");
+    response.setDateHeader("Expires", 0);
+    
+    String buyerEmail = (String) session.getAttribute("email");
+    if (buyerEmail == null || buyerEmail.isEmpty()) {
+        response.sendRedirect("Login.jsp");
+        return;
+    }
+    
+    // Get location and category filters
+    String category = request.getParameter("category");
+    if (category == null) category = "";
+    
+    // Get cart count and total
+    int cartCount = 0;
+    double cartTotal = 0.0;
+    try {
+        Connection conn = DBConnector.getConnection();
+        String cartQuery = "SELECT c.quantity, t.buyingprice FROM cart c " +
+                          "JOIN tradecreation t ON c.trade_id = t.id " +
+                          "WHERE c.buyer_email = ?";
+        PreparedStatement ps = conn.prepareStatement(cartQuery);
+        ps.setString(1, buyerEmail);
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            cartCount++;
+            cartTotal += rs.getInt("quantity") * rs.getDouble("buyingprice");
+        }
+        ps.close();
+        conn.close();
+    } catch (SQLException e) {
+        System.out.println(e);
+    }
+    
+    // Get trades with filters
+    List<Map<String, Object>> trades = new ArrayList<>();
+    try {
+        Connection conn = DBConnector.getConnection();
+        StringBuilder queryBuilder = new StringBuilder(
+            "SELECT t.id, t.commodity, t.category, t.origin, t.quantity, t.buyingprice, " +
+            "t.image, t.available, t.farmer_email, f.fname, f.street, f.city, f.state " +
+            "FROM tradecreation t " +
+            "JOIN farmerregistration f ON t.farmer_email = f.email " +
+            "WHERE t.available = 1"
+        );
+        
+        if (category != null && !category.isEmpty()) {
+            queryBuilder.append(" AND t.category = ?");
+        }
+        
+        queryBuilder.append(" ORDER BY t.created_at DESC");
+        
+        PreparedStatement ps = conn.prepareStatement(queryBuilder.toString());
+        
+        if (category != null && !category.isEmpty()) {
+            ps.setString(1, category);
+        }
+        
+        ResultSet rs = ps.executeQuery();
+        
+        while (rs.next()) {
+            Map<String, Object> trade = new HashMap<>();
+            trade.put("id", rs.getInt("id"));
+            trade.put("commodity", rs.getString("commodity"));
+            trade.put("category", rs.getString("category"));
+            trade.put("origin", rs.getString("origin"));
+            trade.put("quantity", rs.getInt("quantity"));
+            trade.put("buyingprice", rs.getDouble("buyingprice"));
+            trade.put("farmer_email", rs.getString("farmer_email"));
+            trade.put("fname", rs.getString("fname"));
+            trade.put("street", rs.getString("street"));
+            trade.put("city", rs.getString("city"));
+            trade.put("state", rs.getString("state"));
+            
+            byte[] imageBytes = rs.getBytes("image");
+            String base64Image = "";
+            if (imageBytes != null && imageBytes.length > 0) {
+                base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
+            }
+            trade.put("base64Image", base64Image);
+            trades.add(trade);
+        }
+        ps.close();
+        conn.close();
+    } catch (SQLException e) {
+        out.println("<p style='color:red;'>SQL Error: " + e.getMessage() + "</p>");
+    }
+%>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmer's Marketplace - Available Trades</title>
+    <title>Kisan Mitra - Fresh from Farm</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2e7d32;
-            --secondary-color: #81c784;
-            --accent-color: #f9a825;
-            --accent-hover: #f57f17;
-            --text-color: #333;
-            --light-bg: #f5f5f5;
-            --white: #fff;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --card-radius: 12px;
-            --danger-color: #e53935;
-            --warning-color: #ff9800;
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding: 0;
-            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            color: var(--white);
-            padding: 20px 0;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            animation: fadeInDown 1s ease-out;
-        }
-        
-        header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-top: 10px;
-            animation: fadeInUp 1s ease-out;
-        }
-        
-        .header-graphic {
-            position: absolute;
-            width: 100%;
-            height: 100%;
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            position: sticky;
             top: 0;
-            left: 0;
-            overflow: hidden;
-            z-index: 0;
-        }
-        
-        .header-graphic svg {
-            position: absolute;
-            bottom: -20px;
-            left: 0;
-            width: 100%;
-            height: auto;
-            opacity: 0.1;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
         
         .header-content {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .navigation {
-            background-color: var(--white);
-            padding: 15px 0;
-            box-shadow: var(--shadow);
-            margin-bottom: 30px;
-        }
-        
-        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 18px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
         }
         
         .nav-links {
             display: flex;
-            list-style: none;
-            gap: 20px;
+            gap: 30px;
+            align-items: center;
         }
         
-        .nav-links a {
+        .nav-item {
+            color: white;
             text-decoration: none;
-            color: var(--text-color);
-            font-weight: 500;
-            transition: color 0.3s;
-            padding: 8px 12px;
-            border-radius: 4px;
-        }
-        
-        .nav-links a:hover, .nav-links a.active {
-            color: var(--primary-color);
-            background-color: rgba(46, 125, 50, 0.1);
-        }
-        
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .user-menu a {
-            text-decoration: none;
-            color: var(--text-color);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .user-menu .user-icon {
-            background-color: var(--primary-color);
-            color: white;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-        
-        .card {
-            background: var(--white);
-            border-radius: var(--card-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: fadeIn 0.6s ease-out forwards;
-            opacity: 0;
-            transform: translateY(20px);
-            position: relative;
-        }
-        
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-        }
-        
-        .card-image {
-            height: 180px;
-            overflow: hidden;
-            position: relative;
-            background-color: #f0f0f0;
-        }
-        
-        .card-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        
-        .card:hover .card-image img {
-            transform: scale(1.1);
-        }
-        
-        .unavailable-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .no-image {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            color: #aaa;
-            font-size: 3rem;
-        }
-        
-        .card-content {
-            padding: 20px;
-        }
-        
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: var(--primary-color);
-        }
-        
-        .card-origin {
-            color: #666;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .card-origin i {
-            margin-right: 5px;
-            color: var(--accent-color);
-        }
-        
-        .card-details {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        
-        .detail-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .detail-label {
-            font-size: 0.8rem;
-            color: #888;
-        }
-        
-        .detail-value {
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: var(--text-color);
-        }
-        
-        .buy-now-btn {
-            display: block;
-            width: 100%;
-            background-color: var(--accent-color);
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border: none;
-            border-radius: 0 0 var(--card-radius) var(--card-radius);
             font-weight: 600;
             font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 15px;
-            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            position: relative;
         }
         
-        .buy-now-btn:hover {
-            background-color: var(--accent-hover);
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
             transform: translateY(-2px);
         }
         
-        .buy-now-btn.disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
         }
         
-        .buy-now-btn.disabled:hover {
-            background-color: #ccc;
-            transform: none;
-        }
-        
-        .buy-now-btn i {
-            margin-right: 5px;
-        }
-        
-        .filters {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px 20px;
-            background: var(--white);
-            border-radius: var(--card-radius);
-            box-shadow: var(--shadow);
-            animation: fadeIn 0.6s ease-out;
-        }
-        
-        .search-container {
-            flex: 1;
-            max-width: 400px;
+        .cart-wrapper {
             position: relative;
         }
         
-        .search-container input {
-            width: 100%;
-            padding: 12px 20px;
-            padding-left: 40px;
-            border: 1px solid #ddd;
-            border-radius: 30px;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-        
-        .search-container input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
-        }
-        
-        .search-container i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #888;
-        }
-        
-        .placeholder {
-            min-height: 400px;
+        .cart-button {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 8px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            color: #aaa;
-            font-size: 1.2rem;
+            gap: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
         }
         
-        footer {
+        .cart-button:hover {
+            background: #ff5252;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        .cart-badge {
+            background: #ffd93d;
+            color: #1e3c72;
+            border-radius: 50%;
+            min-width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            border: 2px solid white;
+        }
+        
+        /* Categories */
+        .categories {
+            background: white;
+            padding: 25px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .categories-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+        }
+        
+        .categories-grid {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding-bottom: 5px;
+        }
+        
+        .categories-grid::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .category-card {
+            min-width: 140px;
+            padding: 20px;
+            border-radius: 20px;
             text-align: center;
-            padding: 30px 0;
-            margin-top: 50px;
-            color: #777;
-            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border: 3px solid transparent;
         }
         
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
         
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .category-card.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
         
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .category-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            transition: all 0.3s;
         }
         
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-            100% {
-                transform: scale(1);
-            }
+        .category-card.active .category-icon {
+            transform: scale(1.2);
         }
         
-        /* Responsiveness */
+        .category-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .category-card.active .category-name {
+            color: white;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
+        
+        .section-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+        }
+        
+        .section-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+        
+        /* Product Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .product-image-wrapper {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .product-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+        
+        .product-card:hover .product-image-wrapper img {
+            transform: scale(1.1);
+        }
+        
+        .product-category-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.95);
+            color: #667eea;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .product-details {
+            padding: 20px;
+        }
+        
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .product-farmer {
+            font-size: 13px;
+            color: #636e72;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .product-quantity {
+            font-size: 13px;
+            color: #00b894;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .product-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 2px solid #f1f3f5;
+        }
+        
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .product-price-label {
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+        }
+        
+        .add-to-cart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .add-to-cart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            color: white;
+        }
+        
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .empty-state p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
         @media (max-width: 768px) {
-            .grid-container {
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            }
-            
-            .filters {
+            .header-content {
+                padding: 15px 20px;
                 flex-direction: column;
                 gap: 15px;
             }
             
-            .search-container {
-                max-width: 100%;
-            }
-            
-            header h1 {
-                font-size: 2rem;
-            }
-            
-            .nav-container {
-                flex-direction: column;
-                gap: 15px;
+            .logo {
+                font-size: 1.5rem;
             }
             
             .nav-links {
                 flex-wrap: wrap;
+                gap: 10px;
                 justify-content: center;
             }
-        }
-        
-        @media (max-width: 480px) {
-            .grid-container {
-                grid-template-columns: 1fr;
+            
+            .nav-item {
+                padding: 8px 15px;
+                font-size: 0.9rem;
             }
             
-            .card-content {
+            .cart-button {
+                padding: 8px 20px;
+                font-size: 0.95rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 15px;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .categories-grid {
+                gap: 10px;
+            }
+            
+            .category-card {
+                min-width: 110px;
                 padding: 15px;
+            }
+            
+            .category-icon {
+                font-size: 2.5rem;
             }
         }
     </style>
 </head>
 <body>
-    
-    <%
-        // Define a Trade class to hold trade data
-        class Trade {
-            int id;
-            String commodity;
-            String origin;
-            int quantity;
-            double buyingPrice;
-            int available; // For out-of-stock control
-            String base64Image;
-            String category;
-            
-            Trade(int id, String commodity, String origin, int quantity, double buyingPrice, 
-                  int available, String base64Image, String category) {
-                this.id = id;
-                this.commodity = commodity != null ? commodity : "";
-                this.origin = origin != null ? origin : "";
-                this.quantity = quantity;
-                this.buyingPrice = buyingPrice;
-                this.available = available;
-                this.base64Image = base64Image != null ? base64Image : "";
-                this.category = category != null ? category : "produce";
-            }
-        }
-        
-        // Get user information for the header
-        String userName = (String) session.getAttribute("userName");
-        if (userName == null) {
-            userName = "Guest";
-        }
-        
-        List<Trade> trades = new ArrayList<>();
-        try {
-            Statement st = DBConnector.getStatement();
-            String query = "SELECT id, commodity, origin, quantity, buyingprice, image, available FROM tradecreation ORDER BY id DESC";
-            ResultSet rs = st.executeQuery(query);
-            while (rs.next()) {
-                byte[] imageBytes = rs.getBytes("image");
-                String base64Image = "";
-                if (imageBytes != null && imageBytes.length > 0) {
-                    base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
-                }
-                
-                // Handle available integer
-                int available;
-                try {
-                    available = rs.getInt("available");
-                    if (rs.wasNull()) {
-                        available = 2; // Default as in original code
-                    }
-                } catch (SQLException e) {
-                    available = 2; // Fallback
-                }
-                
-                Trade trade = new Trade(
-                    rs.getInt("id"),
-                    rs.getString("commodity"),
-                    rs.getString("origin"),
-                    rs.getInt("quantity"),
-                    rs.getDouble("buyingprice"),
-                    available,
-                    base64Image,
-                    "produce" // Default category since not in query
-                );
-                trades.add(trade);
-            }
-        } catch (SQLException e) {
-            out.println("<p style='color:red;'>SQL Error: " + e.getMessage() + "</p>");
-        }
-    %>
-
-    <header>
-        <div class="header-graphic">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-                <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,224C672,213,768,171,864,165.3C960,160,1056,192,1152,202.7C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-            </svg>
-        </div>
+    <!-- Header -->
+    <div class="header">
         <div class="header-content">
-            <h1><i class="fas fa-leaf"></i> Farmer's Marketplace</h1>
-            <p>Find and purchase fresh produce directly from farmers</p>
-        </div>
-    </header>
-    
-    <nav class="navigation">
-        <div class="nav-container">
-            <ul class="nav-links">
-                <li><a href="Home.html"><i class="fas fa-home"></i> Home</a></li>
-                <li><a href="ViewTrades.jsp" class="active"><i class="fas fa-store"></i> Marketplace</a></li>
-                <li><a href="About.html"><i class="fas fa-info-circle"></i> About</a></li>
-                <li><a href="ContactUs.html"><i class="fas fa-envelope"></i> Contact</a></li>
-            </ul>
-            <div class="user-menu">
-                <div class="user-icon">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                Kisan Mitra
+            </div>
+
+            <div class="nav-links">
+                <a href="BuyerDashboard.jsp" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="MyOrders.jsp" class="nav-item">
+                    <i class="fas fa-box"></i>
+                    Orders
+                </a>
+                <a href="BuyerProfile.jsp" class="nav-item">
                     <i class="fas fa-user"></i>
-                </div>
-                <a href="BuyerProfile.jsp">Welcome, <%= userName %></a>
-                <a href="Logout.jsp"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <div class="filters">
-            <div class="search-container">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Search commodities...">
-            </div>
-        </div>
-
-        <div class="grid-container">
-            <% 
-                int delay = 0;
-                for (Trade trade : trades) {
-                    delay += 100; // Increment delay for staggered animation
-            %>
-            <div class="card" style="animation-delay: <%= delay %>ms;" 
-                 data-category="<%= trade.category.toLowerCase() %>">
-                <div class="card-image">
-                    <% if (!trade.base64Image.isEmpty()) { %>
-                        <img src="data:image/jpeg;base64,<%= trade.base64Image %>" alt="<%= trade.commodity %>" loading="lazy">
-                    <% } else { %>
-                        <div class="no-image">
-                            <i class="fas fa-seedling"></i>
-                        </div>
-                    <% } %>
-                    <% if (trade.available != 1) { %>
-                        <div class="unavailable-overlay">
-                            Out of Stock
-                        </div>
+                    Profile
+                </a>
+                <div class="cart-wrapper">
+                    <a href="Cart.jsp" class="cart-button">
+                        <i class="fas fa-shopping-cart"></i>
+                        <% if (cartTotal > 0) { %>
+                            &#8377;<%= String.format("%,.0f", cartTotal) %>
+                        <% } else { %>
+                            Cart
+                        <% } %>
+                    </a>
+                    <% if (cartCount > 0) { %>
+                        <div class="cart-badge"><%= cartCount %></div>
                     <% } %>
                 </div>
-                <div class="card-content">
-                    <div class="card-title"><%= trade.commodity %></div>
-                    <div class="card-origin">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <%= trade.origin %>
-                    </div>
-                    <div class="card-details">
-                        <div class="detail-item">
-                            <div class="detail-label">QUANTITY</div>
-                            <div class="detail-value"><%= trade.quantity %> MT</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">PRICE</div>
-                            <div class="detail-value">Rs.<%= String.format("%,.2f", trade.buyingPrice) %></div>
-                        </div>
-                    </div>
-                </div>
-                <% if (trade.available == 1) { %>
-                    <a href="TradeDetails.jsp?id=<%= trade.id %>" class="buy-now-btn">
-                        <i class="fas fa-shopping-bag"></i> Buy Now
-                    </a>
-                <% } else { %>
-                    <a href="javascript:void(0);" class="buy-now-btn disabled">
-                        <i class="fas fa-ban"></i> Out of Stock
-                    </a>
-                <% } %>
             </div>
-            <% } %>
-            
-            <% if (trades.isEmpty()) { %>
-            <div class="placeholder">
-                <p>No crop listings available at the moment.</p>
-            </div>
-            <% } %>
         </div>
     </div>
-
-    <footer>
-        <p>© <%= new java.util.Date().getYear() + 1900 %> Farmer's Marketplace. Supporting local farmers and sustainable agriculture.</p>
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+ 
+    <!-- Categories -->
+    <div class="categories">
+        <div class="categories-container">
+            <div class="categories-grid">
+                <div class="category-card <%= category.isEmpty() ? "active" : "" %>" onclick="filterCategory('')">
+                    <div class="category-icon"><i class="fas fa-th"></i></div>
+                    <div class="category-name">All Products</div>
+                </div>
+                <div class="category-card <%= "Fruit".equals(category) ? "active" : "" %>" onclick="filterCategory('Fruit')">
+                    <div class="category-icon"><i class="fas fa-apple-alt"></i></div>
+                    <div class="category-name">Fruits</div>
+                </div>
+                <div class="category-card <%= "Vegetable".equals(category) ? "active" : "" %>" onclick="filterCategory('Vegetable')">
+                    <div class="category-icon"><i class="fas fa-carrot"></i></div>
+                    <div class="category-name">Vegetables</div>
+                </div>
+                <div class="category-card <%= "Cereal".equals(category) ? "active" : "" %>" onclick="filterCategory('Cereal')">
+                    <div class="category-icon"><i class="fas fa-seedling"></i></div>
+                    <div class="category-name">Cereals</div>
+                </div>
+                <div class="category-card <%= "Pulse".equals(category) ? "active" : "" %>" onclick="filterCategory('Pulse')">
+                    <div class="category-icon"><i class="fas fa-circle"></i></div>
+                    <div class="category-name">Pulses</div>
+                </div>
+                <div class="category-card <%= "Masala".equals(category) ? "active" : "" %>" onclick="filterCategory('Masala')">
+                    <div class="category-icon"><i class="fas fa-pepper-hot"></i></div>
+                    <div class="category-name">Masala</div>
+                </div>
+                <div class="category-card <%= "Dairy Product".equals(category) ? "active" : "" %>" onclick="filterCategory('Dairy Product')">
+                    <div class="category-icon"><i class="fas fa-glass-whiskey"></i></div>
+                    <div class="category-name">Dairy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="section-header">
+            <h1 class="section-title">
+                <%= category.isEmpty() ? "Fresh From Farm" : category %>
+            </h1>
+            <p class="section-subtitle">Premium quality products directly from farmers</p>
+        </div>
+        
+        <% if (!trades.isEmpty()) { %>
+            <div class="products-grid">
+                <% for (Map<String, Object> trade : trades) { %>
+                    <div class="product-card" onclick="window.location.href='TradeDetails.jsp?id=<%= trade.get("id") %>'">
+                        <div class="product-image-wrapper">
+                            <% String base64Image = (String) trade.get("base64Image");
+                               if (base64Image != null && !base64Image.isEmpty()) { %>
+                                <img src="data:image/jpeg;base64,<%= base64Image %>" alt="<%= trade.get("commodity") %>">
+                            <% } else { %>
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-image" style="font-size: 4rem; color: rgba(0,0,0,0.1);"></i>
+                                </div>
+                            <% } %>
+                            <span class="product-category-badge"><%= trade.get("category") %></span>
+                        </div>
+                        <div class="product-details">
+                            <div class="product-name"><%= trade.get("commodity") %></div>
+                            <div class="product-farmer">
+                                <i class="fas fa-user-tie"></i>
+                                <%= trade.get("fname") %>
+                            </div>
+                            <div class="product-quantity">
+                                <i class="fas fa-box"></i> <%= trade.get("quantity") %> Kg
+                            </div>
+                            <div class="product-footer">
+                                <div>
+                                    <div class="product-price">&#8377;<%= String.format("%,.0f", trade.get("buyingprice")) %></div>
+                                    <div class="product-price-label">per Kg</div>
+                                </div>
+                                <form action="AddToCart.jsp" method="post" onclick="event.stopPropagation();">
+                                    <input type="hidden" name="trade_id" value="<%= trade.get("id") %>">
+                                    <button type="submit" class="add-to-cart-btn">
+                                        <i class="fas fa-plus"></i> ADD
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <i class="fas fa-seedling"></i>
+                <h3>No Products Found</h3>
+                <p>Try browsing other categories</p>
+            </div>
+        <% } %>
+    </div>
+    
     <script>
-        $(document).ready(function() {
-            // Search functionality
-            $("#searchInput").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
-                $(".card").filter(function() {
-                    var matches = $(this).text().toLowerCase().indexOf(value) > -1;
-                    $(this).toggle(matches);
-                });
-            });
-            
-            // Apply random animation delays for a staggered effect
-            $(".card").each(function(index) {
-                $(this).css("animation-delay", (index * 100) + "ms");
-            });
-        });
+        function filterCategory(category) {
+            window.location.href = 'ViewTrades.jsp' + (category ? '?category=' + encodeURIComponent(category) : '');
+        }
     </script>
 </body>
 </html>

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package db;
 
 import java.sql.Connection;
@@ -12,46 +7,49 @@ import java.sql.Statement;
 import java.sql.PreparedStatement;
 
 /**
- *
- * @author mitesh
+ * Database Connector with proper connection management
  */
-public class DBConnector 
-{
-    static Connection conn =null;
-    static Statement st=null;
-    static PreparedStatement pst=null;
+public class DBConnector {
     
-    static
-    {
-         try
-              {
-                  Class.forName("com.mysql.jdbc.Driver");
-                  System.out.println("Driver Loaded");
-                  
-                  conn=DriverManager.getConnection("jdbc:mysql://localhost:3306/kisanmitra", "root", "root");
-                  System.out.println("Connected");
-                  
-                  st=conn.createStatement();
-                 
-                  
-              }
-              catch(ClassNotFoundException e)
-              {
-                  System.out.println(e);
-              }
-              catch(SQLException e)
-              {
-                  System.out.println(e);
-              }
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/kisanmitra";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "root";
+    private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
+    
+    static {
+        try {
+            Class.forName(DB_DRIVER);
+            System.out.println("Driver Loaded");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Driver loading failed: " + e);
+            e.printStackTrace();
+        }
     }
-    public static Connection getConnection()
-    {
-        return conn;
+    
+    /**
+     * Get a new database connection
+     * Each call creates a fresh connection
+     */
+    public static Connection getConnection() throws SQLException {
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            System.out.println("New connection created");
+            return conn;
+        } catch (SQLException e) {
+            System.out.println("Connection failed: " + e);
+            throw e;
+        }
     }
-    public static Statement getStatement()
-    {
+    
+    /**
+     * Create a statement from a new connection
+     * WARNING: Use this carefully - always close the connection after use
+     */
+    @Deprecated
+    public static Statement getStatement() throws SQLException {
+        Connection conn = getConnection();
+        Statement st = conn.createStatement();
+        System.out.println("New statement created");
         return st;
     }
-    
-    
 }

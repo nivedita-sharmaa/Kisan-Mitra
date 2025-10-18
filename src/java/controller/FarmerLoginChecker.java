@@ -19,10 +19,7 @@ import model.FarmerLoginAuthenticator;
 import model.BuyerLoginAuthenticator;
 
 
-/**
- *
- * @author mitesh
- */
+
 public class FarmerLoginChecker extends HttpServlet 
 {
    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
@@ -38,7 +35,7 @@ public class FarmerLoginChecker extends HttpServlet
        try
         {
             Statement st= DBConnector.getStatement(); 
-            String query="SELECT first name FROM farmerregistration WHERE email='"+email+"'";
+            String query="SELECT fname FROM farmerregistration WHERE email='"+email+"'";
             System.out.println("query="+query);
             ResultSet rs=st.executeQuery(query);
             if(rs.next())
@@ -63,7 +60,7 @@ public class FarmerLoginChecker extends HttpServlet
            HttpSession session= request.getSession(true);
            session.setAttribute("email", email);
            session.setAttribute("fname", fname);
-           response.sendRedirect("FarmerProfile.html");
+           response.sendRedirect("FarmerDashboard.jsp");
        }
        else
        {

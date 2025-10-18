@@ -1,744 +1,496 @@
-
+<%@ include file="SessionValidator.jsp" %>
 <%@ page import="db.DBConnector" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.util.*" %>
-<%@ page import="java.text.SimpleDateFormat" %>
+
+<%
+    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    String buyerEmail = (String) session.getAttribute("email");
+    
+    // Fetch buyer details
+    String buyerName = "";
+    String buyerAddress = "";
+    String buyerMobile = "";
+    
+    // Group cart items by farmer
+    Map<String, List<Map<String, Object>>> farmerOrders = new LinkedHashMap<String, List<Map<String, Object>>>();
+    Map<String, Map<String, Object>> farmerDetails = new HashMap<String, Map<String, Object>>();
+    
+    try {
+        Connection conn = DBConnector.getConnection();
+        
+        // Get buyer info
+        String buyerQuery = "SELECT fname, lname, street, city, state, mobile FROM buyerregistration WHERE email = ?";
+        PreparedStatement buyerPs = conn.prepareStatement(buyerQuery);
+        buyerPs.setString(1, buyerEmail);
+        ResultSet buyerRs = buyerPs.executeQuery();
+        
+        if (buyerRs.next()) {
+            buyerName = buyerRs.getString("fname") + " " + buyerRs.getString("lname");
+            buyerAddress = buyerRs.getString("street") + ", " + buyerRs.getString("city") + ", " + buyerRs.getString("state");
+            buyerMobile = buyerRs.getString("mobile");
+        }
+        buyerPs.close();
+        
+        // Get cart items grouped by farmer
+        String cartQuery = "SELECT c.id, c.quantity, c.trade_id, t.commodity, t.category, t.buyingprice, t.image, " +
+                          "f.fname AS farmer_fname, f.lname AS farmer_lname, f.email AS farmer_email, " +
+                          "f.street AS farmer_street, f.city AS farmer_city, f.state AS farmer_state, f.mobile AS farmer_mobile " +
+                          "FROM cart c " +
+                          "JOIN tradecreation t ON c.trade_id = t.id " +
+                          "JOIN farmerregistration f ON t.farmer_email = f.email " +
+                          "WHERE c.buyer_email = ? " +
+                          "ORDER BY f.email";
+        PreparedStatement cartPs = conn.prepareStatement(cartQuery);
+        cartPs.setString(1, buyerEmail);
+        ResultSet cartRs = cartPs.executeQuery();
+        
+        while (cartRs.next()) {
+            String farmerEmail = cartRs.getString("farmer_email");
+            
+            // Store farmer details
+            if (!farmerDetails.containsKey(farmerEmail)) {
+                Map<String, Object> farmer = new HashMap<String, Object>();
+                farmer.put("name", cartRs.getString("farmer_fname") + " " + cartRs.getString("farmer_lname"));
+                farmer.put("email", farmerEmail);
+                farmer.put("address", cartRs.getString("farmer_street") + ", " + cartRs.getString("farmer_city") + ", " + cartRs.getString("farmer_state"));
+                farmer.put("mobile", cartRs.getString("farmer_mobile"));
+                farmerDetails.put(farmerEmail, farmer);
+            }
+            
+            // Group items by farmer
+            Map<String, Object> item = new HashMap<String, Object>();
+            item.put("cart_id", cartRs.getInt("id"));
+            item.put("trade_id", cartRs.getInt("trade_id"));
+            item.put("commodity", cartRs.getString("commodity"));
+            item.put("category", cartRs.getString("category"));
+            item.put("quantity", cartRs.getInt("quantity"));
+            item.put("price", cartRs.getDouble("buyingprice"));
+            item.put("farmer_email", farmerEmail);
+            
+            byte[] imageBytes = cartRs.getBytes("image");
+            String base64Image = "";
+            if (imageBytes != null && imageBytes.length > 0) {
+                base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
+            }
+            item.put("base64Image", base64Image);
+            
+            double itemTotal = cartRs.getInt("quantity") * cartRs.getDouble("buyingprice");
+            item.put("total", itemTotal);
+            
+            // Add to farmer's order list
+            if (!farmerOrders.containsKey(farmerEmail)) {
+                farmerOrders.put(farmerEmail, new ArrayList<Map<String, Object>>());
+            }
+            farmerOrders.get(farmerEmail).add(item);
+        }
+        cartPs.close();
+        conn.close();
+    } catch (SQLException e) {
+        out.println("<p style='color:red;'>SQL Error: " + e.getMessage() + "</p>");
+    }
+    
+    // Check if there are multiple farmers
+    int farmerCount = farmerOrders.size();
+    
+    // Store data in session
+    session.setAttribute("farmerOrders", farmerOrders);
+    session.setAttribute("farmerDetails", farmerDetails);
+    session.setAttribute("buyerName", buyerName);
+    session.setAttribute("buyerAddress", buyerAddress);
+    session.setAttribute("buyerMobile", buyerMobile);
+%>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmer's Marketplace - Payment Gateway</title>
+    <title>Payment - Kisan Mitra</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2e7d32;
-            --secondary-color: #81c784;
-            --accent-color: #f9a825;
-            --accent-hover: #f57f17;
-            --danger-color: #e53935;
-            --success-color: #43a047;
-            --text-color: #333;
-            --light-bg: #f5f5f5;
-            --white: #fff;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --card-radius: 12px;
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding: 0;
-            margin: 0;
-            min-height: 100vh;
+            background: #f5f7fa;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            color: var(--white);
-            padding: 20px 0;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            animation: fadeInDown 1s ease-out;
-        }
-        
-        header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-top: 10px;
-            animation: fadeInUp 1s ease-out;
-        }
-        
-        .header-graphic {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            overflow: hidden;
-            z-index: 0;
-        }
-        
-        .header-graphic svg {
-            position: absolute;
-            bottom: -20px;
-            left: 0;
-            width: 100%;
-            height: auto;
-            opacity: 0.1;
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
         
         .header-content {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .payment-container {
-            background: var(--white);
-            border-radius: var(--card-radius);
-            box-shadow: var(--shadow);
-            padding: 30px;
-            margin-bottom: 30px;
-            animation: fadeIn 0.8s ease-out forwards;
-        }
-        
-        .page-title {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-            border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 10px;
-        }
-        
-        .order-summary {
-            background-color: rgba(129, 199, 132, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-        }
-        
-        .summary-title {
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: var(--primary-color);
-            font-size: 1.2rem;
-        }
-        
-        .summary-row {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 18px 30px;
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed #ddd;
+            align-items: center;
         }
         
-        .summary-row:last-child {
-            border-bottom: none;
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
         }
         
-        .summary-label {
-            font-weight: 500;
+         /* Navigation Bar */
+            .navbar {
+                background: rgba(26, 42, 108, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 15px 30px;
+                box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+            }
+
+            .nav-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .nav-brand {
+                color: white;
+                font-size: 1.8rem;
+                font-weight: bold;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .nav-brand:hover {
+                opacity: 0.8;
+            }
+
+            .nav-menu {
+                display: flex;
+                list-style: none;
+                gap: 30px;
+                align-items: center;
+            }
+
+            .nav-menu a {
+                color: white;
+                text-decoration: none;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .nav-menu a:hover {
+                color: #ffd700;
+                transform: translateY(-2px);
+            }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
         }
         
-        .summary-value {
-            font-weight: 600;
-        }
-        
-        .total-row {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px solid #ddd;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-        
-        .payment-options {
+        .warning-banner {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
             margin-bottom: 30px;
-        }
-        
-        .payment-title {
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: var(--primary-color);
-            font-size: 1.2rem;
-        }
-        
-        .payment-methods {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            display: flex;
+            align-items: center;
             gap: 15px;
-            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(243, 156, 18, 0.3);
         }
         
-        .payment-method {
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .payment-method:hover {
-            border-color: var(--secondary-color);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .payment-method.selected {
-            border-color: var(--primary-color);
-            background-color: rgba(46, 125, 50, 0.05);
-        }
-        
-        .payment-icon {
+        .warning-icon {
             font-size: 2rem;
-            margin-bottom: 10px;
-            color: var(--text-color);
         }
         
-        .payment-name {
-            font-weight: 500;
+        .warning-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
         }
         
-        .payment-form {
-            display: none;
-        }
-        
-        .payment-form.active {
-            display: block;
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+        .warning-content p {
             font-size: 1rem;
-            transition: border 0.3s ease;
+            opacity: 0.9;
         }
         
-        .form-input:focus {
-            border-color: var(--secondary-color);
-            outline: none;
+        .farmer-orders {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
         }
         
-        .input-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        .farmer-order-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .farmer-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            display: flex;
+            align-items: center;
             gap: 15px;
         }
         
-        .btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+        .farmer-icon {
+            width: 60px;
+            height: 60px;
+            background: white;
+            color: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+        
+        .farmer-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .farmer-info p {
+            opacity: 0.9;
+        }
+        
+        .order-content {
+            padding: 30px;
+        }
+        
+        .order-items {
+            margin-bottom: 25px;
+        }
+        
+        .order-item {
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #e0e0e0;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .item-details h4 {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .item-category {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #27ae60;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
             font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .item-qty {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+        }
+        
+        .item-price {
+            text-align: right;
+        }
+        
+        .item-price-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .order-total {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .pay-farmer-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
         }
         
-        .btn-primary {
-            background-color: var(--accent-color);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: var(--accent-hover);
+        .pay-farmer-btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
         }
         
-        .btn-secondary {
-            background-color: #e0e0e0;
-            color: var(--text-color);
-        }
-        
-        .btn-secondary:hover {
-            background-color: #d0d0d0;
-        }
-        
-        .action-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-        }
-        
-        /* Overlay for Payment Processing */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        
-        .overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .processing-box {
-            background-color: var(--white);
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
-        }
-        
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid var(--primary-color);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        .success-animation {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            background-color: #eafaea;
-            position: relative;
-            display: none;
-        }
-        
-        .checkmark {
-            width: 40px;
-            height: 40px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--success-color);
-            font-size: 40px;
-            display: none;
-        }
-        
-        .processing-message {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-        
-        .processing-details {
-            color: #666;
-            margin-bottom: 20px;
-        }
-        
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes checkScale {
-            0% { transform: translate(-50%, -50%) scale(0); }
-            50% { transform: translate(-50%, -50%) scale(1.2); }
-            100% { transform: translate(-50%, -50%) scale(1); }
-        }
-        
-        @keyframes boxScale {
-            0% { transform: scale(0.8); opacity: 0; }
-            50% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        
-        /* Responsiveness */
         @media (max-width: 768px) {
-            .input-row {
+            .order-item {
                 grid-template-columns: 1fr;
             }
             
-            .payment-methods {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .action-buttons .btn {
-                width: 100%;
+            .item-price {
+                text-align: left;
             }
         }
     </style>
 </head>
 <body>
-    <%
-        // Get user information for the header
-        String userName = (String) session.getAttribute("userName");
-        if (userName == null) {
-            userName = "Guest";
-        }
-        
-        // Get the trade and quantity data from the request
-        String tradeIdStr = request.getParameter("tradeId");
-        String quantityStr = request.getParameter("quantity");
-        String priceStr = request.getParameter("price");
-        
-        int tradeId = 0;
-        int quantity = 0;
-        double price = 0.0;
-        
-        try {
-            tradeId = Integer.parseInt(tradeIdStr);
-            quantity = Integer.parseInt(quantityStr);
-            price = Double.parseDouble(priceStr);
-        } catch (NumberFormatException e) {
-            // Error in parameters
-        }
-        
-        // Get trade and farmer details from database
-        String commodity = "";
-        String origin = "";
-        
-        if (tradeId > 0) {
-            try {
-                Statement st = DBConnector.getStatement();
-                String query = "SELECT commodity, origin FROM tradecreation WHERE id = " + tradeId;
-                ResultSet rs = st.executeQuery(query);
-                
-                if (rs.next()) {
-                    commodity = rs.getString("commodity");
-                    origin = rs.getString("origin");
-                }
-            } catch (SQLException e) {
-                out.println("<p style='color:red;'>SQL Error: " + e.getMessage() + "</p>");
-            }
-        }
-        
-        // Calculate totals
-        double subtotal = price * quantity;
-        double gst = subtotal * 0.05;
-        double total = subtotal + gst;
-        
-        // Generate a random order ID
-        String orderId = "ORD" + System.currentTimeMillis();
-    %>
-
-    <header>
-        <div class="header-graphic">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-                <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,224C672,213,768,171,864,165.3C960,160,1056,192,1152,202.7C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-            </svg>
-        </div>
+<!--    <div class="header">
         <div class="header-content">
-            <h1><i class="fas fa-leaf"></i> Payment Gateway</h1>
-            <p>Secure payment processing for your purchase</p>
+            <a href="index.jsp" class="logo">
+                <i class="fas fa-leaf"></i>
+                Kisan Mitra
+            </a>
         </div>
-    </header>
-    
-    <div class="container">
-        <div class="payment-container">
-            <h2 class="page-title">Complete Your Purchase</h2>
-            
-            <div class="order-summary">
-                <div class="summary-title">Order Summary</div>
-                <div class="summary-row">
-                    <div class="summary-label">Product:</div>
-                    <div class="summary-value"><%= commodity %></div>
-                </div>
-                <div class="summary-row">
-                    <div class="summary-label">Origin:</div>
-                    <div class="summary-value"><%= origin %></div>
-                </div>
-                <div class="summary-row">
-                    <div class="summary-label">Quantity:</div>
-                    <div class="summary-value"><%= quantity %> MT</div>
-                </div>
-                <div class="summary-row">
-                    <div class="summary-label">Price per MT:</div>
-                    <div class="summary-value">Rs.<%= String.format("%,.2f", price) %></div>
-                </div>
-                <div class="summary-row">
-                    <div class="summary-label">Subtotal:</div>
-                    <div class="summary-value">Rs.<%= String.format("%,.2f", subtotal) %></div>
-                </div>
-                <div class="summary-row">
-                    <div class="summary-label">GST (5%):</div>
-                    <div class="summary-value">Rs.<%= String.format("%,.2f", gst) %></div>
-                </div>
-                <div class="summary-row total-row">
-                    <div class="summary-label">Total:</div>
-                    <div class="summary-value">Rs.<%= String.format("%,.2f", total) %></div>
-                </div>
-            </div>
-            
-            <div class="payment-options">
-                <div class="payment-title">Select Payment Method</div>
-                <div class="payment-methods">
-                    <div class="payment-method" data-method="credit-card">
-                        <div class="payment-icon"><i class="fas fa-credit-card"></i></div>
-                        <div class="payment-name">Credit Card</div>
-                    </div>
-                    <div class="payment-method" data-method="debit-card">
-                        <div class="payment-icon"><i class="fas fa-credit-card"></i></div>
-                        <div class="payment-name">Debit Card</div>
-                    </div>
-                    <div class="payment-method" data-method="net-banking">
-                        <div class="payment-icon"><i class="fas fa-university"></i></div>
-                        <div class="payment-name">Net Banking</div>
-                    </div>
-                    <div class="payment-method" data-method="upi">
-                        <div class="payment-icon"><i class="fas fa-mobile-alt"></i></div>
-                        <div class="payment-name">UPI</div>
-                    </div>
-                    <div class="payment-method" data-method="wallet">
-                        <div class="payment-icon"><i class="fas fa-wallet"></i></div>
-                        <div class="payment-name">Wallet</div>
-                    </div>
-                </div>
-                
-                <!-- Credit Card Form -->
-                <div class="payment-form" id="credit-card-form">
-                    <div class="form-group">
-                        <label class="form-label">Card Number</label>
-                        <input type="text" class="form-input" placeholder="1234 5678 9012 3456" maxlength="19">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Cardholder Name</label>
-                        <input type="text" class="form-input" placeholder="Name on card">
-                    </div>
-                    <div class="input-row">
-                        <div class="form-group">
-                            <label class="form-label">Expiry Date</label>
-                            <input type="text" class="form-input" placeholder="MM/YY" maxlength="5">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">CVV</label>
-                            <input type="password" class="form-input" placeholder="123" maxlength="3">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Debit Card Form (same as credit card) -->
-                <div class="payment-form" id="debit-card-form">
-                    <div class="form-group">
-                        <label class="form-label">Card Number</label>
-                        <input type="text" class="form-input" placeholder="1234 5678 9012 3456" maxlength="19">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Cardholder Name</label>
-                        <input type="text" class="form-input" placeholder="Name on card">
-                    </div>
-                    <div class="input-row">
-                        <div class="form-group">
-                            <label class="form-label">Expiry Date</label>
-                            <input type="text" class="form-input" placeholder="MM/YY" maxlength="5">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">CVV</label>
-                            <input type="password" class="form-input" placeholder="123" maxlength="3">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Net Banking Form -->
-                <div class="payment-form" id="net-banking-form">
-                    <div class="form-group">
-                        <label class="form-label">Select Bank</label>
-                        <select class="form-input">
-                            <option value="">Choose your bank</option>
-                            <option value="sbi">State Bank of India</option>
-                            <option value="hdfc">HDFC Bank</option>
-                            <option value="icici">ICICI Bank</option>
-                            <option value="axis">Axis Bank</option>
-                            <option value="pnb">Punjab National Bank</option>
-                            <option value="kotak">Kotak Mahindra Bank</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- UPI Form -->
-                <div class="payment-form" id="upi-form">
-                    <div class="form-group">
-                        <label class="form-label">UPI ID</label>
-                        <input type="text" class="form-input" placeholder="yourname@upi">
-                    </div>
-                </div>
-                
-                <!-- Wallet Form -->
-                <div class="payment-form" id="wallet-form">
-                    <div class="form-group">
-                        <label class="form-label">Select Wallet</label>
-                        <select class="form-input">
-                            <option value="">Choose your wallet</option>
-                            <option value="paytm">Paytm</option>
-                            <option value="phonepe">PhonePe</option>
-                            <option value="gpay">Google Pay</option>
-                            <option value="mobikwik">Mobikwik</option>
-                            <option value="freecharge">Freecharge</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Mobile Number</label>
-                        <input type="text" class="form-input" placeholder="Your registered mobile number">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Hidden form for processing -->
-            <form action="PaymentSuccess.jsp" method="post" id="paymentForm">
-                <input type="hidden" name="tradeId" value="<%= tradeId %>">
-                <input type="hidden" name="quantity" value="<%= quantity %>">
-                <input type="hidden" name="totalAmount" value="<%= total %>">
-                <input type="hidden" name="paymentMethod" id="paymentMethodInput" value="">
-                <input type="hidden" name="orderId" value="<%= orderId %>">
-            </form>
-            
-            <div class="action-buttons">
-                <a href="ViewTrades.jsp?id=<%= tradeId %>" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Go Back
+    </div>-->
+     <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="BuyerDashboard.jsp" class="nav-brand">
+                    <i class="fas fa-leaf"></i> Kisan Mitra
                 </a>
-                <button id="payNowBtn" class="btn btn-primary">
-                    <i class="fas fa-lock"></i> Pay Now Rs.<%= String.format("%,.2f", total) %>
-                </button>
+                <ul class="nav-menu">
+                    <li><a href="BuyerDashboard.jsp" class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+                    <li><a href="ViewTrades.jsp"><i class="fas fa-store"></i> <span>Browse</span></a></li>
+                    <li><a href="MyOrders.jsp"><i class="fas fa-box"></i> <span>Orders</span></a></li>
+                    <li><a href="Cart.jsp"><i class="fas fa-shopping-cart"></i> <span>Cart</span></a></li>
+                    <li><a href="BuyerProfile.jsp"><i class="fas fa-user-circle"></i> <span>Profile</span></a></li>
+                </ul>
             </div>
+        </nav>
+    <div class="container">
+        <% if (farmerCount > 1) { %>
+            <div class="warning-banner">
+                <div class="warning-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="warning-content">
+                    <h3>Multiple Farmers Detected</h3>
+                    <p>Your cart contains items from <%= farmerCount %> different farmers. You'll need to complete separate payments for each farmer.</p>
+                </div>
+            </div>
+        <% } %>
+        
+        <div class="farmer-orders">
+            <% 
+            int orderNumber = 1;
+            for (Map.Entry<String, List<Map<String, Object>>> entry : farmerOrders.entrySet()) {
+                String farmerEmail = entry.getKey();
+                List<Map<String, Object>> items = entry.getValue();
+                Map<String, Object> farmer = farmerDetails.get(farmerEmail);
+                
+                double farmerTotal = 0.0;
+                for (Map<String, Object> item : items) {
+                    farmerTotal += (Double) item.get("total");
+                }
+                double finalTotal = farmerTotal * 1.05; // Including GST
+            %>
+                <div class="farmer-order-card">
+                    <div class="farmer-header">
+                        <div class="farmer-icon">
+                            <i class="fas fa-tractor"></i>
+                        </div>
+                        <div class="farmer-info">
+                            <h3>Order #<%= orderNumber++ %> - <%= farmer.get("name") %></h3>
+                            <p><i class="fas fa-envelope"></i> <%= farmer.get("email") %> | <i class="fas fa-phone"></i> <%= farmer.get("mobile") %></p>
+                        </div>
+                    </div>
+                    
+                    <div class="order-content">
+                        <div class="order-items">
+                            <% for (Map<String, Object> item : items) { %>
+                                <div class="order-item">
+                                    <div class="item-image">
+                                        <% 
+                                            String base64Image = (String) item.get("base64Image");
+                                            if (base64Image != null && !base64Image.isEmpty()) { 
+                                        %>
+                                            <img src="data:image/jpeg;base64,<%= base64Image %>" alt="<%= item.get("commodity") %>">
+                                        <% } else { %>
+                                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #bdc3c7;">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <div class="item-details">
+                                        <h4><%= item.get("commodity") %></h4>
+                                        <span class="item-category"><%= item.get("category") %></span>
+                                        <div class="item-qty"><%= item.get("quantity") %> Kg × &#8377;<%= String.format("%,.0f", item.get("price")) %></div>
+                                    </div>
+                                    <div class="item-price">
+                                        <div class="item-price-value">&#8377;<%= String.format("%,.0f", item.get("total")) %></div>
+                                    </div>
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <div class="order-total">
+                            <span>Total (incl. 5% GST)</span>
+                            <span>&#8377;<%= String.format("%,.2f", finalTotal) %></span>
+                        </div>
+                        
+                        <form action="ProcessPayment.jsp" method="post">
+                            <input type="hidden" name="farmer_email" value="<%= farmerEmail %>">
+                            <button type="submit" class="pay-farmer-btn">
+                                <i class="fas fa-lock"></i>
+                                Pay &#8377;<%= String.format("%,.2f", finalTotal) %> to <%= farmer.get("name") %>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            <% } %>
         </div>
     </div>
-    
-    <!-- Processing Overlay -->
-    <div class="overlay" id="processingOverlay">
-        <div class="processing-box">
-            <div class="loader" id="paymentLoader"></div>
-            <div class="success-animation" id="successAnimation">
-                <i class="fas fa-check checkmark" id="checkmark"></i>
-            </div>
-            <h3 class="processing-message" id="processingMessage">Processing Payment...</h3>
-            <p class="processing-details" id="processingDetails">Please wait while we securely process your payment. Do not refresh the page.</p>
-            <button id="continueBtn" class="btn btn-primary" style="display: none;">
-                Continue to Order Summary
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // Payment method selection
-        const paymentMethods = document.querySelectorAll('.payment-method');
-        const paymentForms = document.querySelectorAll('.payment-form');
-        const payMethodInput = document.getElementById('paymentMethodInput');
-        
-        paymentMethods.forEach(method => {
-            method.addEventListener('click', function() {
-                // Remove selected class from all methods
-                paymentMethods.forEach(m => m.classList.remove('selected'));
-                
-                // Add selected class to clicked method
-                this.classList.add('selected');
-                
-                // Hide all forms
-                paymentForms.forEach(form => form.classList.remove('active'));
-                
-                // Show selected form
-                const methodName = this.getAttribute('data-method');
-                document.getElementById(methodName + '-form').classList.add('active');
-                
-                // Update form value
-                payMethodInput.value = methodName;
-            });
-        });
-        
-        // Select credit card by default
-        document.querySelector('[data-method="credit-card"]').click();
-        
-        // Pay Now button handler
-        document.getElementById('payNowBtn').addEventListener('click', function() {
-            // Show overlay
-            document.getElementById('processingOverlay').classList.add('active');
-            
-            // Simulate payment processing
-            setTimeout(function() {
-                // Hide loader
-                document.getElementById('paymentLoader').style.display = 'none';
-                
-                // Show success animation
-                const successAnim = document.getElementById('successAnimation');
-                successAnim.style.display = 'block';
-                successAnim.style.animation = 'boxScale 0.5s forwards';
-                
-                // Show checkmark with animation
-                const checkmark = document.getElementById('checkmark');
-                checkmark.style.display = 'block';
-                checkmark.style.animation = 'checkScale 0.5s forwards';
-                
-                // Update messages
-                document.getElementById('processingMessage').textContent = 'Payment Successful!';
-                document.getElementById('processingDetails').textContent = 'Your order has been placed successfully. You will receive a confirmation shortly.';
-                
-                // Show continue button
-                const continueBtn = document.getElementById('continueBtn');
-                continueBtn.style.display = 'inline-block';
-                
-                // Set up continue button to submit form
-                continueBtn.addEventListener('click', function() {
-                    document.getElementById('paymentForm').submit();
-                });
-                
-            }, 3000); // 3 seconds of "processing"
-        });
-    </script>
 </body>
 </html>
