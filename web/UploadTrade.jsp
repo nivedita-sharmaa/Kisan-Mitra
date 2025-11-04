@@ -273,7 +273,7 @@
             <option value="Vegetable">Vegetable</option>
             <option value="Cereal">Cereal</option>
             <option value="Pulse">Pulse</option>
-            <option value="Masala">Masala</option>
+            <option value="Spice">Spice</option>
             <option value="Dairy Product">Dairy Product</option>
           </select>
         </div>

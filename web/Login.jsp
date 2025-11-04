@@ -241,7 +241,7 @@
         </div>
 
         <div class="button-group">
-            <a href="Home.jsp.html" class="login-btn">
+            <a href="Home.html" class="login-btn">
                 <i class="fas fa-sign-in-alt"></i>
                 Login Again
             </a>
