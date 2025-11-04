@@ -96,7 +96,7 @@
         min-height: 85vh;
         display: flex;
         align-items: center;
-        background: linear-gradient(135deg, rgba(26, 42, 108, 0.9), rgba(178, 31, 31, 0.8), rgba(253, 187, 45, 0.8));
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         position: relative;
         overflow: hidden;
     }
@@ -112,7 +112,9 @@
         opacity: 0.15;
         z-index: -1;
     }
-
+    #page2{
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    }
     .container {
         max-width: 1400px;
         margin: auto;
@@ -262,7 +264,7 @@
         height: 4px;
         bottom: -10px;
         left: 15%;
-        background: linear-gradient(90deg, #0c4b33, #FF9E00);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         border-radius: 4px;
     }
 
@@ -612,24 +614,17 @@
 </head>
 <body>
     
-    <div id="navbar"></div>
-
-  <!-- Script to load navbar -->
-  <script>
-    fetch("navbar.html")
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Navbar not found");
-        }
-        return response.text();
-      })
-      .then(data => {
-        document.getElementById("navbar").innerHTML = data;
-      })
-      .catch(error => {
-        console.error("Error loading navbar:", error);
-      });
-  </script>
+     <nav>
+        <div class="logo">
+            <p>🌾 KisanMitra</p>
+        </div>
+        <ul>
+            <li><a href="Home.html">Home</a></li>
+            <li><a href="About.html">About</a></li>
+            <li><a href="ContactUs.html">Contact</a></li>
+            <li><a href="Help.html">Help</a></li>
+        </ul>
+    </nav>
 
     <!-- Enhanced Hero Section (Page 1) -->
     <section class="page" id="page1">
@@ -846,34 +841,6 @@
     <p>&copy; 2024 Harvest Connect. All Rights Reserved.</p>
   </footer>
     <!-- Additional JS for animations -->
-    <script>
-        // Intersection Observer to trigger animations when elements come into view
-        document.addEventListener('DOMContentLoaded', function() {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.animationPlayState = 'running';
-                    }
-                });
-            }, { threshold: 0.1 });
-            
-            // Observe all service cards
-            document.querySelectorAll('.service').forEach(service => {
-                service.style.animationPlayState = 'paused';
-                observer.observe(service);
-            });
-            
-            // Hover effects for service cards
-            document.querySelectorAll('.service').forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-10px)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        });
-    </script>
+   
 </body>
 </html>

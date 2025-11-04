@@ -14,7 +14,7 @@
 
     body {
       font-family: "Arial", sans-serif;
-      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
       background-size: 400% 400%;
       color: #333;
       line-height: 1.6;
@@ -220,13 +220,19 @@
 
 <body>
   <!-- Navbar (loaded dynamically) -->
-  <div id="navbar"></div>
-  <script>
-    fetch("navbar.html")
-      .then(res => res.text())
-      .then(html => document.getElementById("navbar").innerHTML = html)
-      .catch(err => console.error("Navbar not found:", err));
-  </script>
+ <nav>
+        <div class="logo">
+            <p>🌾 KisanMitra</p>
+        </div>
+        <ul>
+            <li><a href="Home.html">Home</a></li>
+                  <li><a href="About.html">About</a></li>
+            <li><a href="Services.html">Services</a></li>
+            <li><a href="ContactUs.html">Contact</a></li>
+   
+        </ul>
+       
+    </nav>
 
   <!-- Header -->
   <header>

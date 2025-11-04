@@ -29,7 +29,7 @@ and open the template in the editor.
 
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             color: #333;
             overflow-x: hidden;
         }
@@ -712,22 +712,17 @@ and open the template in the editor.
     </style>
 </head>
 <body>
-    <div id="navbar"></div>
-   <script>
-    fetch("navbar.html")
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Navbar not found");
-        }
-        return response.text();
-      })
-      .then(data => {
-        document.getElementById("navbar").innerHTML = data;
-      })
-      .catch(error => {
-        console.error("Error loading navbar:", error);
-      });
-  </script>
+    <nav>
+        <div class="logo">
+            <p>🌾 KisanMitra</p>
+        </div>
+        <ul>
+            <li><a href="Home.html">Home</a></li>
+            <li><a href="Services.html">Services</a></li>
+            <li><a href="ContactUs.html">Contact</a></li>
+            <li><a href="Help.html">Help</a></li>
+        </ul>
+    </nav>
     <section class="hero">
         <div class="container">
             <div class="hero-content">
