@@ -22,9 +22,9 @@ public class FarmerRegistrationChecker extends HttpServlet {
         String firstname = request.getParameter("first-name");
         String lastname = request.getParameter("last-name");
         String gender = request.getParameter("gender");
-        String cropgrown = request.getParameter("crop-grown");
-        String farmsize = request.getParameter("farmsize");
-        System.out.println("farmsize:"+farmsize);
+//        String cropgrown = request.getParameter("crop-grown");
+//        String farmsize = request.getParameter("farmsize");
+//        System.out.println("farmsize:"+farmsize);
         String mobile = request.getParameter("mobile");
         String email=request.getParameter("email");
         String password=request.getParameter("password");
@@ -40,7 +40,7 @@ public class FarmerRegistrationChecker extends HttpServlet {
 
         try {
         Statement st = DBConnector.getStatement();
-        String query2 = "INSERT INTO farmerregistration (fname, lname, gender, cropgrown, farmsize, mobile, email, password, confirm, street, city, state, pin, country) VALUES ('" + firstname + "', '" + lastname + "', '" + gender + "', '" + cropgrown + "', '" + farmsize + "', '" + mobile + "','" + email + "','" + password + "','" + confirmpassword + "','" + street + "','" + city + "','" + state + "','" + postal + "','" + country + "')";
+        String query2 = "INSERT INTO farmerregistration (fname, lname, gender, mobile, email, password, confirm, street, city, state, pin, country) VALUES ('" + firstname + "', '" + lastname + "', '" + gender + "',  '" + mobile + "','" + email + "','" + password + "','" + confirmpassword + "','" + street + "','" + city + "','" + state + "','" + postal + "','" + country + "')";
         System.out.println(query2);
         i = st.executeUpdate(query2);
 

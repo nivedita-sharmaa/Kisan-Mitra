@@ -31,8 +31,8 @@ public class UpdateFarmerProfile extends HttpServlet {
     String fname = request.getParameter("first-name");
     String lname = request.getParameter("last-name");
     String gender = request.getParameter("gender");
-    String cropgrown = request.getParameter("crop-grown");
-    String farmsize = request.getParameter("farmsize");
+//    String cropgrown = request.getParameter("crop-grown");
+//    String farmsize = request.getParameter("farmsize");
     String mobile = request.getParameter("mobile");
    
     String street = request.getParameter("street");
@@ -47,8 +47,8 @@ public class UpdateFarmerProfile extends HttpServlet {
             "fname='" + fname + "', " +
             "lname='" + lname + "', " +
             "gender='" + gender + "', " +
-            "cropGrown='" + cropgrown + "', " +
-            "farmSize='" + farmsize + "', " +
+//            "cropGrown='" + cropgrown + "', " +
+//            "farmSize='" + farmsize + "', " +
             "mobile='" + mobile + "', " +
             "street='" + street + "', " +
             "city='" + city + "', " +

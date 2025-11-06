@@ -1,13 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package controller;
-
 import db.DBConnector;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URLEncoder;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -17,48 +12,53 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class BuyerRegistrationChecker extends HttpServlet {
-
+    
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.sendRedirect("BuyerRegistration.html");
     }
-
+    
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html");
         String firstname = request.getParameter("first-name");
         String lastname = request.getParameter("last-name");
         String gender = request.getParameter("gender");
-        String company = request.getParameter("company");
         String mobile = request.getParameter("mobile");
-        String email=request.getParameter("email");
-        String password=request.getParameter("password");
-        String confirmpassword=request.getParameter("confirm-password");
-        String street=request.getParameter("street");
-        String city=request.getParameter("city");
-        String state=request.getParameter("state");
-        String postal=request.getParameter("postal");
-        String country=request.getParameter("country");
-        String terms=request.getParameter("terms");
-        PrintWriter out = response.getWriter();
+        String email = request.getParameter("email");
+        String password = request.getParameter("password");
+        String confirmpassword = request.getParameter("confirm-password");
+        String street = request.getParameter("street");
+        String city = request.getParameter("city");
+        String state = request.getParameter("state");
+        String postal = request.getParameter("postal");
+        String country = request.getParameter("country");
+        String terms = request.getParameter("terms");
+        
         int i = 0;
-
         try {
-           
             Statement st = DBConnector.getStatement();
-            //String query = "SELECT email FROM buyerregistration WHERE email='" + email + "'";
-            //ResultSet rs = st.executeQuery(query);        
-                String query2 = "INSERT INTO buyerregistration (fname,lname,gender,company,mobile,email,password,confirm,street,city,state,pin,country) VALUES ('" +firstname+ "', '" + lastname + "', '" + gender + "', '" + company + "', '" + mobile + "','"+email+"','"+password+"','"+confirmpassword+"','"+street+"','"+city+"','"+state+"','"+postal+"','"+country+"')";
-                System.out.println(query2);
-                i = st.executeUpdate(query2);
-                System.out.println("i"+i);
-        if (i > 0) {
-            // ✅ Redirect to Thank You page
-            response.sendRedirect("Thankyou.html");
-        } else {
-            out.println("Registration failed. Please try again.");
+            String query2 = "INSERT INTO buyerregistration (fname,lname,gender,mobile,email,password,confirm,street,city,state,pin,country) VALUES ('" 
+                    + firstname + "', '" + lastname + "', '" + gender + "', '" + mobile + "','" 
+                    + email + "','" + password + "','" + confirmpassword + "','" + street + "','" 
+                    + city + "','" + state + "','" + postal + "','" + country + "')";
+            
+            System.out.println(query2);
+            i = st.executeUpdate(query2);
+            System.out.println("i" + i);
+            
+            if (i > 0) {
+                response.sendRedirect("Thankyou.html");
+            } else {
+                response.sendRedirect("error.jsp?error=" + URLEncoder.encode("Registration failed. Please try again.", "UTF-8"));
+            }
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Redirect to error page with the error message
+            try {
+                response.sendRedirect("error.jsp?error=" + URLEncoder.encode(e.getMessage(), "UTF-8"));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        out.println("Database error: " + e.getMessage());
-    }
     }
 }

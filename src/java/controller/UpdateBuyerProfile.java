@@ -23,7 +23,7 @@ public class UpdateBuyerProfile extends HttpServlet {
         String firstName = request.getParameter("first-name");
         String lastName = request.getParameter("last-name");
         String gender = request.getParameter("gender");
-        String company = request.getParameter("company");
+//        String company = request.getParameter("company");
         String mobile = request.getParameter("mobile");
         String street = request.getParameter("street");
         String city = request.getParameter("city");
@@ -34,21 +34,21 @@ public class UpdateBuyerProfile extends HttpServlet {
         
         try {
             Connection conn = DBConnector.getConnection();
-            String query = "UPDATE buyerregistration SET fname=?, lname=?, gender=?, company=?, mobile=?, street=?, city=?, state=?, pin=?, country=?, location=? WHERE email=?";
+            String query = "UPDATE buyerregistration SET fname=?, lname=?, gender=?, mobile=?, street=?, city=?, state=?, pin=?, country=?, location=? WHERE email=?";
             PreparedStatement ps = conn.prepareStatement(query);
             
             ps.setString(1, firstName);
             ps.setString(2, lastName);
             ps.setString(3, gender);
-            ps.setString(4, company);
-            ps.setString(5, mobile);
-            ps.setString(6, street);
-            ps.setString(7, city);
-            ps.setString(8, state);
-            ps.setString(9, postal);
-            ps.setString(10, country);
-            ps.setString(11, location);
-            ps.setString(12, email);
+//            ps.setString(4, company);
+            ps.setString(4, mobile);
+            ps.setString(5, street);
+            ps.setString(6, city);
+            ps.setString(7, state);
+            ps.setString(8, postal);
+            ps.setString(9, country);
+            ps.setString(10, location);
+            ps.setString(11, email);
             
             int result = ps.executeUpdate();
             
