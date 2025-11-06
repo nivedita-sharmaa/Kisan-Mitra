@@ -183,7 +183,7 @@
         <div class="nav-container">
             <a href="FarmerDashboard.jsp" class="nav-brand"><i class="fas fa-leaf"></i> Kisan Mitra</a>
             <ul class="nav-menu">
-                <li><a href="Home.html"><i class="fas fa-upload"></i> <span>Home</span></a></li>
+<!--                <li><a href="Home.html"><i class="fas fa-upload"></i> <span>Home</span></a></li>-->
                 <li><a href="UploadTrade.jsp"><i class="fas fa-upload"></i> <span>Upload Trade</span></a></li>
                 <li><a href="ShowTrades.jsp"><i class="fas fa-chart-line"></i> <span>My Trades</span></a></li>
                 <li><a href="FarmerSales.jsp"><i class="fas fa-dollar-sign"></i> <span>Sales</span></a></li>

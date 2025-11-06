@@ -18,12 +18,12 @@
         return;
     }
 
-    String fname = "", lname = "", gender = "", company = "";
+    String fname = "", lname = "", gender = "";
     String mobile = "", email = "", street = "", city = "", state = "", pin = "", country = "", location = "";
 
     try {
         Connection conn = DBConnector.getConnection();
-        String query = "SELECT fname, lname, gender, company, mobile, email, street, city, state, pin, country, location FROM buyerregistration WHERE email = ?";
+        String query = "SELECT fname, lname, gender, mobile, email, street, city, state, pin, country, location FROM buyerregistration WHERE email = ?";
         PreparedStatement ps = conn.prepareStatement(query);
         ps.setString(1, emailSession);
         ResultSet rs = ps.executeQuery();
@@ -32,7 +32,7 @@
             fname = rs.getString("fname");
             lname = rs.getString("lname");
             gender = rs.getString("gender") != null ? rs.getString("gender") : "";
-            company = rs.getString("company") != null ? rs.getString("company") : "";
+//            company = rs.getString("company") != null ? rs.getString("company") : "";
             mobile = rs.getString("mobile");
             email = rs.getString("email");
             street = rs.getString("street") != null ? rs.getString("street") : "";
@@ -86,7 +86,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -289,6 +289,13 @@
         .session-check {
             display: none;
         }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -334,12 +341,12 @@
                             <option value="Other" <%= "Other".equals(gender) ? "selected" : "" %>>Other</option>
                         </select>
                     </div>
-                    <div class="form-group">
+<!--                    <div class="form-group">
                         <label for="company">
                             <i class="fas fa-building"></i> Company
                         </label>
-                        <input type="text" id="company" name="company" value="<%= company %>">
-                    </div>
+                        <input type="text" id="company" name="company" value="">
+                    </div>-->
                 </div>
 
                 <!-- Contact Information Section -->
@@ -447,5 +454,8 @@
                 });
         }, 3000);
     </script>
+    <div class="footer">
+        <p>&copy; 2025 Kisan Mitra. Empowering farmers through technology.</p>
+    </div>
 </body>
 </html>

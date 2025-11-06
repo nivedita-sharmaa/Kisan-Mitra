@@ -19,7 +19,7 @@
 
     try {
         Connection conn = DBConnector.getConnection();
-        String query = "SELECT fname, lname, gender, cropgrown, farmsize, mobile, email, street, city, state, pin, country FROM farmerregistration WHERE email = ?";
+        String query = "SELECT fname, lname, gender, mobile, email, street, city, state, pin, country FROM farmerregistration WHERE email = ?";
         PreparedStatement ps = conn.prepareStatement(query);
         ps.setString(1, farmerEmail);
         ResultSet rs = ps.executeQuery();
@@ -28,8 +28,8 @@
             fname = rs.getString("fname");
             lname = rs.getString("lname");
             gender = rs.getString("gender");
-            cropgrown = rs.getString("cropgrown");
-            farmsize = rs.getString("farmsize");
+//            cropgrown = rs.getString("cropgrown");
+//            farmsize = rs.getString("farmsize");
             mobile = rs.getString("mobile");
             email = rs.getString("email");
             street = rs.getString("street");
@@ -421,6 +421,13 @@
                 font-size: 1.2rem;
             }
         }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -482,14 +489,14 @@
                             <div class="info-label">Gender</div>
                             <div class="info-value"><%= gender %></div>
                         </div>
-                        <div class="info-card">
+<!--                        <div class="info-card">
                             <div class="info-label">Crop Grown</div>
                             <div class="info-value"><%= cropgrown %></div>
                         </div>
                         <div class="info-card">
                             <div class="info-label">Farm Size</div>
                             <div class="info-value"><%= farmsize %></div>
-                        </div>
+                        </div>-->
                     </div>
                 </div>
 
@@ -572,5 +579,8 @@
             }
         });
     </script>
+    <div class="footer">
+        <p>&copy; 2025 Kisan Mitra. Empowering farmers through technology.</p>
+    </div>
 </body>
 </html>

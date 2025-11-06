@@ -14,12 +14,12 @@
         return;
     }
     
-    String fname = "", lname = "", gender = "", company = "";
+    String fname = "", lname = "", gender = "";
     String mobile = "", email = "", street = "", city = "", state = "", pin = "", country = "", location = "";
 
     try {
         Connection conn = DBConnector.getConnection();
-        String query = "SELECT fname, lname, gender, company, mobile, email, street, city, state, pin, country, location FROM buyerregistration WHERE email = ?";
+        String query = "SELECT fname, lname, gender, mobile, email, street, city, state, pin, country, location FROM buyerregistration WHERE email = ?";
         PreparedStatement ps = conn.prepareStatement(query);
         ps.setString(1, buyerEmail);
         ResultSet rs = ps.executeQuery();
@@ -28,7 +28,7 @@
             fname = rs.getString("fname");
             lname = rs.getString("lname");
             gender = rs.getString("gender");
-            company = rs.getString("company");
+//            company = rs.getString("company");
             mobile = rs.getString("mobile");
             email = rs.getString("email");
             street = rs.getString("street");
@@ -353,6 +353,13 @@
                     font-size: 1.2rem;
                 }
             }
+            .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
         </style>
         
         <!-- SESSION CHECK SCRIPT -->
@@ -414,10 +421,10 @@
                                 <div class="info-label">Gender</div>
                                 <div class="info-value"><%= gender %></div>
                             </div>
-                            <div class="info-item">
+<!--                            <div class="info-item">
                                 <div class="info-label">Company</div>
-                                <div class="info-value"><%= company %></div>
-                            </div>
+                                <div class="info-value"></div>
+                            </div>-->
                         </div>
                     </div>
                     
@@ -480,5 +487,8 @@
                 </div>
             </div>
         </div>
+         <div class="footer">
+        <p>&copy; 2025 Kisan Mitra. Empowering farmers through technology.</p>
+    </div>
     </body>
 </html>

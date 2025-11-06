@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Failed - Kisan Mitra</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .error-container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 50px 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: shake 0.5s ease-out 0.3s;
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3);
+        }
+
+        .error-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .error-details {
+            background: #fff5f5;
+            border-left: 4px solid #e74c3c;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .error-details h3 {
+            font-size: 0.9rem;
+            color: #e74c3c;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .error-details ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .error-details li {
+            padding: 5px 0;
+            color: #555;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-details li i {
+            color: #e74c3c;
+            font-size: 0.8rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .help-text {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #ecf0f1;
+            color: #95a5a6;
+            font-size: 0.9rem;
+        }
+
+        .help-text a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .help-text a:hover {
+            text-decoration: underline;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .logo i {
+            color: #27ae60;
+            font-size: 2rem;
+        }
+
+        @media (max-width: 480px) {
+            .error-container {
+                padding: 40px 25px;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="logo">
+            <i class="fas fa-leaf"></i>
+            <span>Kisan Mitra</span>
+        </div>
+
+        <div class="error-icon">
+            <i class="fas fa-times"></i>
+        </div>
+
+        <h1>Login Failed</h1>
+        <p class="error-message">We couldn't log you in. Please check your credentials and try again.</p>
+
+        <div class="error-details">
+            <h3><i class="fas fa-exclamation-circle"></i> Common Issues:</h3>
+            <ul>
+                <li>
+                    <i class="fas fa-circle"></i>
+                    Incorrect email address or password
+                </li>
+                <li>
+                    <i class="fas fa-circle"></i>
+                    Account not yet registered
+                </li>
+                <li>
+                    <i class="fas fa-circle"></i>
+                    Caps Lock might be ON
+                </li>
+                <li>
+                    <i class="fas fa-circle"></i>
+                    Password is case-sensitive
+                </li>
+            </ul>
+        </div>
+
+        <div class="action-buttons">
+            <a href="javascript:history.back()" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i>
+                Try Again
+            </a>
+            <a href="ForgotPassword.html" class="btn btn-secondary">
+                <i class="fas fa-key"></i>
+                Forgot Password?
+            </a>
+        </div>
+
+        <div class="help-text">
+            <p>Don't have an account? <a href="FarmerRegistration.html">Register as Farmer</a> or <a href="BuyerRegistration.html">Register as Buyer</a></p>
+            <p style="margin-top: 10px;">Need help? <a href="Contact.html">Contact Support</a></p>
+        </div>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 Kisan Mitra. Empowering farmers through technology.</p>
+    </div>
+</body>
+</html>

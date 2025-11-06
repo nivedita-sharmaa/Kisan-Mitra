@@ -385,6 +385,13 @@
                 grid-template-columns: 1fr;
             }
         }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -522,6 +529,9 @@
                 <% } %>
             </div>
         <% } %>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 Kisan Mitra. Empowering farmers through technology.</p>
     </div>
 </body>
 </html>

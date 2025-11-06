@@ -40,6 +40,14 @@
         <servlet-name>CreateTrade</servlet-name>
         <servlet-class>controller.CreateTrade</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ForgotPasswordChecker</servlet-name>
+        <servlet-class>controller.ForgotPasswordChecker</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ResetPasswordChecker</servlet-name>
+        <servlet-class>controller.ResetPasswordChecker</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>FarmerRegistrationChecker</servlet-name>
         <url-pattern>/FarmerRegistrationChecker</url-pattern>
@@ -79,6 +87,14 @@
     <servlet-mapping>
         <servlet-name>CreateTrade</servlet-name>
         <url-pattern>/CreateTrade</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ForgotPasswordChecker</servlet-name>
+        <url-pattern>/ForgotPasswordChecker</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ResetPasswordChecker</servlet-name>
+        <url-pattern>/ResetPasswordChecker</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

@@ -214,6 +214,13 @@
     .tooltip:hover::after {
       opacity: 1;
     }
+    .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
   </style>
 </head>
 <body>
@@ -254,7 +261,7 @@
         <div class="success-message" id="gender-success"></div>
       </div>
 
-      <div class="form-group">
+<!--      <div class="form-group">
         <label for="crop-grown" class="tooltip" data-tooltip="List the main crops you grow (e.g., wheat, rice, vegetables)">Crop Grown *</label>
         <input type="text" id="crop-grown" name="crop-grown" placeholder="Enter the name of the crop/vegetable" required maxlength="100" />
         <div class="field-counter"><span id="crop-count">0</span>/100</div>
@@ -268,7 +275,7 @@
         <div class="field-counter"><span id="farm-count">0</span>/20</div>
         <div class="error-message" id="farm-error"></div>
         <div class="success-message" id="farm-success"></div>
-      </div>
+      </div>-->
 
       <div class="form-group">
         <label for="mobile">Mobile Number *</label>
@@ -859,5 +866,8 @@
       }
     });
   </script>
+  <div class="footer">
+        <p>&copy; 2025 Kisan Mitra. Empowering farmers through technology.</p>
+    </div>
 </body>
 </html>

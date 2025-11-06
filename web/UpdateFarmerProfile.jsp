@@ -17,12 +17,12 @@
         return;
     }
 
-    String fname = "", lname = "", gender = "", cropgrown = "";
-    String farmsize = "", mobile = "", email = "", street = "", city = "", state = "", pin = "", country = "";
+    String fname = "", lname = "", gender = "";
+    String mobile = "", email = "", street = "", city = "", state = "", pin = "", country = "";
 
     try {
         Connection conn = DBConnector.getConnection();
-        String query = "SELECT fname, lname, gender, cropGrown, farmSize, mobile, email, street, city, state, pin, country FROM farmerregistration WHERE email = ?";
+        String query = "SELECT fname, lname, gender, mobile, email, street, city, state, pin, country FROM farmerregistration WHERE email = ?";
         PreparedStatement ps = conn.prepareStatement(query);
         ps.setString(1, emailSession);
         ResultSet rs = ps.executeQuery();
@@ -31,8 +31,8 @@
             fname = rs.getString("fname") != null ? rs.getString("fname") : "";
             lname = rs.getString("lname") != null ? rs.getString("lname") : "";
             gender = rs.getString("gender") != null ? rs.getString("gender") : "";
-            cropgrown = rs.getString("cropGrown") != null ? rs.getString("cropGrown") : "";
-            farmsize = rs.getString("farmSize") != null ? rs.getString("farmSize") : "";
+//            cropgrown = rs.getString("cropGrown") != null ? rs.getString("cropGrown") : "";
+//            farmsize = rs.getString("farmSize") != null ? rs.getString("farmSize") : "";
             mobile = rs.getString("mobile") != null ? rs.getString("mobile") : "";
             email = rs.getString("email") != null ? rs.getString("email") : "";
             street = rs.getString("street") != null ? rs.getString("street") : "";
@@ -287,6 +287,13 @@
         .session-check {
             display: none;
         }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -339,20 +346,20 @@
                     <i class="fas fa-leaf"></i> Farm Information
                 </div>
 
-                <div class="form-row">
+<!--                <div class="form-row">
                     <div class="form-group">
                         <label for="crop-grown">
                             <i class="fas fa-seedling"></i> Crops Grown
                         </label>
-                        <input type="text" id="crop-grown" name="crop-grown" value="<%= cropgrown %>" placeholder="e.g. Wheat, Rice, Cotton" required>
+                        <input type="text" id="crop-grown" name="crop-grown" value="" placeholder="e.g. Wheat, Rice, Cotton" required>
                     </div>
                     <div class="form-group">
                         <label for="farmsize">
                             <i class="fas fa-expand"></i> Farm Size (Hectares)
                         </label>
-                        <input type="text" id="farmsize" name="farmsize" value="<%= farmsize %>" placeholder="e.g. 5.5 ha" required>
+                        <input type="text" id="farmsize" name="farmsize" value="" placeholder="e.g. 5.5 ha" required>
                     </div>
-                </div>
+                </div>-->
 
                 <!-- Contact Information Section -->
                 <div class="section-title">
@@ -430,7 +437,7 @@
             </form>
         </div>
     </div>
-
+ 
     <!-- SESSION CHECK SCRIPT -->
     <script>
         var sessionCheckInterval = setInterval(function() {
@@ -443,5 +450,6 @@
                 });
         }, 3000);
     </script>
+   
 </body>
 </html>

@@ -361,6 +361,13 @@
                 display: none;
             }
         }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -447,7 +454,7 @@
 
     <!-- Footer -->
     <div class="footer">
-        <p>&copy; 2025 Kisan Mitra. Supporting local farmers and sustainable agriculture.</p>
+       <p>&copy; 2025 Kisan Mitra. Empowering farmers through technology.</p>
     </div>
 
     <!-- SESSION CHECK SCRIPT -->

@@ -11,7 +11,7 @@
       font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       background-size: cover;
       background-position: center;
       min-height: 100vh;
@@ -59,8 +59,8 @@
     .form-group input:focus,
     .form-group select:focus {
       outline: none;
-      border-color: #fdbb2d;
-      box-shadow: 0 0 5px rgba(253, 187, 45, 0.3);
+      border-color: #667eea;
+      box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
     }
 
     .form-group input.valid {
@@ -102,7 +102,7 @@
     .btn-create {
       width: 100%;
       padding: 15px;
-      background: linear-gradient(45deg, #fdbb2d, #b21f1f);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
       border-radius: 8px;
@@ -114,9 +114,9 @@
     }
 
     .btn-create:hover:not(:disabled) {
-      background: linear-gradient(45deg, #b21f1f, #fdbb2d);
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(253, 187, 45, 0.4);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
     }
 
     .btn-create:disabled {
@@ -156,14 +156,14 @@
       border-radius: 2px;
     }
 
-    .strength-weak { background-color: #f44336; width: 25%; }
-    .strength-fair { background-color: #ff9800; width: 50%; }
-    .strength-good { background-color: #2196f3; width: 75%; }
+    .strength-weak { background-color: #f44336; width: 33%; }
+    .strength-fair { background-color: #ff9800; width: 66%; }
     .strength-strong { background-color: #4CAF50; width: 100%; }
 
     .strength-text {
       font-size: 12px;
       margin-top: 2px;
+      color: #666;
     }
 
     .form-summary {
@@ -171,13 +171,8 @@
       padding: 15px;
       border-radius: 8px;
       margin-bottom: 20px;
-      border-left: 4px solid #fdbb2d;
+      border-left: 4px solid #667eea;
       display: none;
-    }
-
-    .summary-item {
-      margin-bottom: 5px;
-      font-size: 14px;
     }
 
     .field-counter {
@@ -186,33 +181,6 @@
       top: 35px;
       font-size: 12px;
       color: #666;
-    }
-
-    .tooltip {
-      position: relative;
-      cursor: help;
-    }
-
-    .tooltip::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: 125%;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #333;
-      color: white;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-      z-index: 1000;
-    }
-
-    .tooltip:hover::after {
-      opacity: 1;
     }
 
     .modal {
@@ -269,7 +237,7 @@
 
     .spinner {
       border: 4px solid #f3f3f3;
-      border-top: 4px solid #fdbb2d;
+      border-top: 4px solid #667eea;
       border-radius: 50%;
       width: 40px;
       height: 40px;
@@ -281,6 +249,13 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
   </style>
 </head>
 <body>
@@ -323,14 +298,6 @@
         </div>
 
         <div class="form-group">
-          <label for="company-name" class="tooltip" data-tooltip="Enter your company or business name">Company Name *</label>
-          <input type="text" id="company-name" name="Company Name" placeholder="Enter your company name" required maxlength="100" />
-          <div class="field-counter"><span id="company-count">0</span>/100</div>
-          <div class="error-message" id="company-error"></div>
-          <div class="success-message" id="company-success"></div>
-        </div>
-
-        <div class="form-group">
           <label for="mobile">Mobile Number *</label>
           <input type="tel" id="mobile" name="mobile" placeholder="Enter your 10-digit mobile number" required maxlength="15" />
           <div class="error-message" id="mobile-error"></div>
@@ -346,20 +313,15 @@
 
         <div class="form-group">
           <label for="password">Password *</label>
-          <input type="password" id="password" name="password" placeholder="Enter strong password (min 8 characters)" required minlength="8" maxlength="128" />
+          <input type="password" id="password" name="password" placeholder="Enter password (min 6 characters)" required minlength="6" maxlength="128" />
           <div class="password-requirements" style="font-size: 12px; margin-top: 5px; color: #666;">
-            <div>Password must contain:</div>
-            <div id="req-length" style="color: #f44336;">✗ At least 8 characters</div>
-            <div id="req-lower" style="color: #f44336;">✗ One lowercase letter (a-z)</div>
-            <div id="req-upper" style="color: #f44336;">✗ One uppercase letter (A-Z)</div>
-            <div id="req-number" style="color: #f44336;">✗ One number (0-9)</div>
-            <div id="req-special" style="color: #f44336;">✗ One special character (!@#$%^&*)</div>
+            Password must contain at least 6 characters
           </div>
           <div class="password-strength">
             <div class="strength-bar">
               <div class="strength-fill" id="strengthFill"></div>
             </div>
-            <div class="strength-text" id="strengthText">Password requirements: 8+ characters, upper/lowercase, numbers, symbols</div>
+            <div class="strength-text" id="strengthText"></div>
           </div>
           <div class="error-message" id="password-error"></div>
           <div class="success-message" id="password-success"></div>
@@ -433,11 +395,10 @@
       <p>Welcome to our platform! Your buyer account has been created successfully.</p>
       <p><strong>Next Steps:</strong></p>
       <ul style="text-align: left; max-width: 300px; margin: 20px auto;">
-       
         <li>Complete your profile setup</li>
         <li>Start browsing products</li>
       </ul>
-      <button class="btn-create" onclick="window.location.href='BuyerRegistrationChecker'" style="margin-top: 20px;">Continue</button>
+      <button class="btn-create" onclick="window.location.href='Login.jsp'" style="margin-top: 20px;">Continue to Login</button>
     </div>
   </div>
 
@@ -483,7 +444,7 @@
         <h3>8. Changes to Terms</h3>
         <p>We may update these terms at any time. Continued use of the platform constitutes acceptance of updated terms.</p>
         
-        <p><strong>Last updated:</strong> January 2025</p>
+        <p><strong>Last updated:</strong> October 2025</p>
       </div>
     </div>
   </div>
@@ -494,8 +455,7 @@
       name: /^[a-zA-Z\s]{2,50}$/,
       email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       mobile: /^[+]?[\d\s\-\(\)]{10,15}$/,
-      postalCode: /^[a-zA-Z0-9\s\-]{3,10}$/,
-      company: /^[a-zA-Z0-9\s\.\-&',]{2,100}$/
+      postalCode: /^[a-zA-Z0-9\s\-]{3,10}$/
     };
 
     // Form elements
@@ -506,15 +466,15 @@
     const loadingScreen = document.getElementById('loadingScreen');
     const successScreen = document.getElementById('successScreen');
     
-    // Real-time validation for all fields
+    // Real-time validation for all fields (removed company-name)
     const fields = [
-      'first-name', 'last-name', 'gender', 'company-name', 
+      'first-name', 'last-name', 'gender', 
       'mobile', 'email', 'password', 'confirm-password', 'street', 
       'city', 'state', 'postal', 'country', 'terms'
     ];
 
-    // Character counters
-    const counterFields = ['first-name', 'last-name', 'company-name', 'street', 'city', 'state', 'country'];
+    // Character counters (removed company-name)
+    const counterFields = ['first-name', 'last-name', 'street', 'city', 'state', 'country'];
     
     counterFields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
@@ -551,18 +511,6 @@
           }
           break;
 
-        case 'company-name':
-          if (!value.trim()) {
-            errorMessage = 'Company name is required';
-            isValid = false;
-          } else if (!validationRules.company.test(value)) {
-            errorMessage = 'Company name should be 2-100 characters with letters, numbers, and basic punctuation';
-            isValid = false;
-          } else {
-            successMessage = 'Valid company name';
-          }
-          break;
-
         case 'email':
           if (!value.trim()) {
             errorMessage = 'Email is required';
@@ -588,46 +536,19 @@
           break;
 
         case 'password':
-          const strength = checkPasswordStrength(value);
           if (!value) {
             errorMessage = 'Password is required';
             isValid = false;
-          } else if (value.length < 8) {
-            errorMessage = 'Password must be at least 8 characters long';
+          } else if (value.length < 6) {
+            errorMessage = 'Password must be at least 6 characters long';
             isValid = false;
           } else if (value.length > 128) {
             errorMessage = 'Password must not exceed 128 characters';
             isValid = false;
-          } else if (!/[a-z]/.test(value)) {
-            errorMessage = 'Password must contain at least one lowercase letter';
-            isValid = false;
-          } else if (!/[A-Z]/.test(value)) {
-            errorMessage = 'Password must contain at least one uppercase letter';
-            isValid = false;
-          } else if (!/[0-9]/.test(value)) {
-            errorMessage = 'Password must contain at least one number';
-            isValid = false;
-          } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
-            errorMessage = 'Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)';
-            isValid = false;
-          } else if (/(.)\1{2,}/.test(value)) {
-            errorMessage = 'Password cannot contain more than 2 consecutive identical characters';
-            isValid = false;
-          } else if (/^(.{0,2})\1+$/.test(value)) {
-            errorMessage = 'Password cannot be repetitive patterns';
-            isValid = false;
-          } else if (isCommonPassword(value)) {
-            errorMessage = 'This password is too common. Please choose a more unique password';
-            isValid = false;
-          } else if (containsPersonalInfo(value)) {
-            errorMessage = 'Password should not contain personal information (name, email, etc.)';
-            isValid = false;
-          } else if (strength.score < 4) {
-            errorMessage = `Password strength: ${strength.label}. Make it stronger for better security`;
-            isValid = false;
           } else {
-            successMessage = `Excellent password! Strength: ${strength.label}`;
+            successMessage = 'Valid password';
           }
+          checkPasswordStrength(value);
           break;
 
         case 'confirm-password':
@@ -709,57 +630,29 @@
       return isValid;
     }
 
-    // Password strength checker with comprehensive validation
+    // Simplified password strength checker
     function checkPasswordStrength(password) {
       let score = 0;
-      let feedback = [];
 
       // Length scoring
+      if (password.length >= 6) score++;
       if (password.length >= 8) score++;
       if (password.length >= 12) score++;
-      if (password.length >= 16) score++;
-
-      // Character type scoring
-      if (/[a-z]/.test(password)) score++;
-      if (/[A-Z]/.test(password)) score++;
-      if (/[0-9]/.test(password)) score++;
-      if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
-
-      // Additional security checks
-      if (password.length >= 10 && /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(password)) {
-        score++; // Bonus for meeting all criteria with good length
-      }
-
-      // Penalty for common patterns
-      if (/(.)\1{2,}/.test(password)) score -= 2; // Repeated characters
-      if (/^(.{0,2})\1+$/.test(password)) score -= 2; // Repetitive patterns
-      if (isCommonPassword(password)) score -= 3; // Common passwords
 
       const strengthFill = document.getElementById('strengthFill');
       const strengthText = document.getElementById('strengthText');
       
-      let label, className, details;
+      let label, className;
       
-      if (score < 2) {
-        label = 'Very Weak';
-        className = 'strength-weak';
-        details = 'Add more character types and length';
-      } else if (score < 4) {
+      if (score === 1) {
         label = 'Weak';
+        className = 'strength-weak';
+      } else if (score === 2) {
+        label = 'Fair';
         className = 'strength-fair';
-        details = 'Include uppercase, numbers, and symbols';
-      } else if (score < 6) {
-        label = 'Good';
-        className = 'strength-good';
-        details = 'Consider making it longer';
-      } else if (score < 8) {
+      } else {
         label = 'Strong';
         className = 'strength-strong';
-        details = 'Excellent password!';
-      } else {
-        label = 'Very Strong';
-        className = 'strength-strong';
-        details = 'Perfect password security!';
       }
 
       if (strengthFill) {
@@ -767,39 +660,10 @@
       }
       
       if (strengthText) {
-        strengthText.textContent = password ? `${label} - ${details}` : 'Password requirements: 8+ characters, upper/lowercase, numbers, symbols';
+        strengthText.textContent = password ? `Password strength: ${label}` : '';
       }
 
-      return { score, label, details };
-    }
-
-    // Check for common passwords
-    function isCommonPassword(password) {
-      const commonPasswords = [
-        'password', 'password123', '123456', '123456789', 'qwerty', 'abc123', 
-        'password1', 'admin', 'letmein', 'welcome', 'monkey', '1234567890',
-        'password12', 'qwerty123', '123abc', 'admin123', 'root', 'toor',
-        'pass', 'test', 'guest', 'user', 'demo', 'sample', 'temp', 'default',
-        'buyer', 'purchase', 'business', 'company', 'trade', 'market'
-      ];
-      
-      return commonPasswords.includes(password.toLowerCase()) || 
-             commonPasswords.some(common => password.toLowerCase().includes(common));
-    }
-
-    // Check if password contains personal information
-    function containsPersonalInfo(password) {
-      const firstName = document.getElementById('first-name').value.toLowerCase();
-      const lastName = document.getElementById('last-name').value.toLowerCase();
-      const email = document.getElementById('email').value.toLowerCase().split('@')[0];
-      const company = document.getElementById('company-name').value.toLowerCase();
-      
-      const personalInfo = [firstName, lastName, email, company].filter(info => info.length > 2);
-      
-      return personalInfo.some(info => 
-        password.toLowerCase().includes(info) || 
-        info.includes(password.toLowerCase())
-      );
+      return score;
     }
 
     // Add event listeners to all fields
@@ -814,10 +678,9 @@
           updateSubmitButton();
         });
 
-        // Special handling for password with real-time requirement checking
+        // Special handling for password
         if (fieldId === 'password') {
           element.addEventListener('input', function() {
-            updatePasswordRequirements(this.value);
             const confirmPassword = document.getElementById('confirm-password');
             if (confirmPassword.value) {
               validateField('confirm-password', confirmPassword.value);
@@ -826,30 +689,6 @@
         }
       }
     });
-
-    // Update password requirement indicators
-    function updatePasswordRequirements(password) {
-      const requirements = [
-        { id: 'req-length', test: password.length >= 8, text: 'At least 8 characters' },
-        { id: 'req-lower', test: /[a-z]/.test(password), text: 'One lowercase letter (a-z)' },
-        { id: 'req-upper', test: /[A-Z]/.test(password), text: 'One uppercase letter (A-Z)' },
-        { id: 'req-number', test: /[0-9]/.test(password), text: 'One number (0-9)' },
-        { id: 'req-special', test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password), text: 'One special character (!@#$%^&*)' }
-      ];
-
-      requirements.forEach(req => {
-        const element = document.getElementById(req.id);
-        if (element) {
-          if (req.test) {
-            element.style.color = '#4CAF50';
-            element.textContent = '✓ ' + req.text;
-          } else {
-            element.style.color = '#f44336';
-            element.textContent = '✗ ' + req.text;
-          }
-        }
-      });
-    }
 
     // Update form completion progress
     function updateFormProgress() {
@@ -926,18 +765,10 @@
       registrationForm.style.display = 'none';
       loadingScreen.style.display = 'block';
 
-      // Simulate form submission
+      // Submit the form
       setTimeout(() => {
-        // Hide loading screen
-        loadingScreen.style.display = 'none';
-        
-        // Show success screen
-        successScreen.style.display = 'block';
-        
-        // Optional: Actually submit the form
-        // In a real application, you would uncomment the line below
         form.submit();
-      }, 3000);
+      }, 1000);
     });
 
     // Terms and Conditions Modal Functions
@@ -989,20 +820,6 @@
       }
     });
 
-    // Email validation with real-time domain check
-    document.getElementById('email').addEventListener('blur', function(e) {
-      const email = e.target.value.toLowerCase();
-      if (email && validationRules.email.test(email)) {
-        const domain = email.split('@')[1];
-        const commonDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'aol.com'];
-        
-        if (!commonDomains.includes(domain)) {
-          // Could add a suggestion feature here
-          console.log('Uncommon email domain detected:', domain);
-        }
-      }
-    });
-
     // Initialize form
     document.addEventListener('DOMContentLoaded', function() {
       updateFormProgress();
@@ -1012,7 +829,7 @@
       document.getElementById('first-name').focus();
     });
 
-    // Add keyboard shortcuts
+    // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
       // Ctrl/Cmd + Enter to submit form (if valid)
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -1026,28 +843,7 @@
         closeTerms();
       }
     });
-
-    // Add copy registration data feature (for development/testing)
-    function copyFormData() {
-      const formData = new FormData(form);
-      const data = {};
-      for (let [key, value] of formData.entries()) {
-        data[key] = value;
-      }
-      
-      const jsonData = JSON.stringify(data, null, 2);
-      navigator.clipboard.writeText(jsonData).then(() => {
-        console.log('Form data copied to clipboard');
-      }).catch(err => {
-        console.error('Failed to copy form data:', err);
-      });
-    }
-
-    // Add development helper (remove in production)
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      console.log('Development mode: Use copyFormData() to copy form data to clipboard');
-      window.copyFormData = copyFormData;
-    }
   </script>
+
 </body>
 </html>

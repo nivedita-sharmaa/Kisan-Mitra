@@ -501,6 +501,13 @@
                 font-size: 2.5rem;
             }
         }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(26, 42, 108, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -641,5 +648,8 @@
             window.location.href = 'ViewTrades.jsp' + (category ? '?category=' + encodeURIComponent(category) : '');
         }
     </script>
+    <div class="footer">
+        <p>&copy; 2025 Kisan Mitra. Empowering farmers through technology.</p>
+    </div>
 </body>
 </html>
