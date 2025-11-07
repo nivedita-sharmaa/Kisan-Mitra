@@ -156,8 +156,9 @@
       border-radius: 2px;
     }
 
-    .strength-weak { background-color: #f44336; width: 33%; }
-    .strength-fair { background-color: #ff9800; width: 66%; }
+    .strength-weak { background-color: #f44336; width: 25%; }
+    .strength-fair { background-color: #ff9800; width: 50%; }
+    .strength-good { background-color: #2196f3; width: 75%; }
     .strength-strong { background-color: #4CAF50; width: 100%; }
 
     .strength-text {
@@ -181,6 +182,33 @@
       top: 35px;
       font-size: 12px;
       color: #666;
+    }
+
+    .tooltip {
+      position: relative;
+      cursor: help;
+    }
+
+    .tooltip::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    }
+
+    .tooltip:hover::after {
+      opacity: 1;
     }
 
     .modal {
@@ -249,13 +277,14 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
     .footer {
-            text-align: center;
-            padding: 20px;
-            color: white;
-            font-size: 0.9rem;
-            background: rgba(26, 42, 108, 0.5);
-        }
+      text-align: center;
+      padding: 20px;
+      color: white;
+      font-size: 0.9rem;
+      background: rgba(26, 42, 108, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -313,15 +342,20 @@
 
         <div class="form-group">
           <label for="password">Password *</label>
-          <input type="password" id="password" name="password" placeholder="Enter password (min 6 characters)" required minlength="6" maxlength="128" />
+          <input type="password" id="password" name="password" placeholder="Enter strong password (min 8 characters)" required minlength="8" maxlength="128" />
           <div class="password-requirements" style="font-size: 12px; margin-top: 5px; color: #666;">
-            Password must contain at least 6 characters
+            <div>Password must contain:</div>
+            <div id="req-length" style="color: #f44336;">✗ At least 8 characters</div>
+            <div id="req-lower" style="color: #f44336;">✗ One lowercase letter (a-z)</div>
+            <div id="req-upper" style="color: #f44336;">✗ One uppercase letter (A-Z)</div>
+            <div id="req-number" style="color: #f44336;">✗ One number (0-9)</div>
+            <div id="req-special" style="color: #f44336;">✗ One special character (!@#$%^&*)</div>
           </div>
           <div class="password-strength">
             <div class="strength-bar">
               <div class="strength-fill" id="strengthFill"></div>
             </div>
-            <div class="strength-text" id="strengthText"></div>
+            <div class="strength-text" id="strengthText">Password requirements: 8+ characters, upper/lowercase, numbers, symbols</div>
           </div>
           <div class="error-message" id="password-error"></div>
           <div class="success-message" id="password-success"></div>
@@ -444,7 +478,7 @@
         <h3>8. Changes to Terms</h3>
         <p>We may update these terms at any time. Continued use of the platform constitutes acceptance of updated terms.</p>
         
-        <p><strong>Last updated:</strong> October 2025</p>
+        <p><strong>Last updated:</strong> November 2025</p>
       </div>
     </div>
   </div>
@@ -466,14 +500,14 @@
     const loadingScreen = document.getElementById('loadingScreen');
     const successScreen = document.getElementById('successScreen');
     
-    // Real-time validation for all fields (removed company-name)
+    // Real-time validation for all fields
     const fields = [
       'first-name', 'last-name', 'gender', 
       'mobile', 'email', 'password', 'confirm-password', 'street', 
       'city', 'state', 'postal', 'country', 'terms'
     ];
 
-    // Character counters (removed company-name)
+    // Character counters
     const counterFields = ['first-name', 'last-name', 'street', 'city', 'state', 'country'];
     
     counterFields.forEach(fieldId => {
@@ -536,19 +570,46 @@
           break;
 
         case 'password':
+          const strength = checkPasswordStrength(value);
           if (!value) {
             errorMessage = 'Password is required';
             isValid = false;
-          } else if (value.length < 6) {
-            errorMessage = 'Password must be at least 6 characters long';
+          } else if (value.length < 8) {
+            errorMessage = 'Password must be at least 8 characters long';
             isValid = false;
           } else if (value.length > 128) {
             errorMessage = 'Password must not exceed 128 characters';
             isValid = false;
+          } else if (!/[a-z]/.test(value)) {
+            errorMessage = 'Password must contain at least one lowercase letter';
+            isValid = false;
+          } else if (!/[A-Z]/.test(value)) {
+            errorMessage = 'Password must contain at least one uppercase letter';
+            isValid = false;
+          } else if (!/[0-9]/.test(value)) {
+            errorMessage = 'Password must contain at least one number';
+            isValid = false;
+          } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+            errorMessage = 'Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)';
+            isValid = false;
+          } else if (/(.)\1{2,}/.test(value)) {
+            errorMessage = 'Password cannot contain more than 2 consecutive identical characters';
+            isValid = false;
+          } else if (/^(.{0,2})\1+$/.test(value)) {
+            errorMessage = 'Password cannot be repetitive patterns';
+            isValid = false;
+          } else if (isCommonPassword(value)) {
+            errorMessage = 'This password is too common. Please choose a more unique password';
+            isValid = false;
+          } else if (containsPersonalInfo(value)) {
+            errorMessage = 'Password should not contain personal information (name, email, etc.)';
+            isValid = false;
+          } else if (strength.score < 4) {
+            errorMessage = `Password strength: ${strength.label}. Make it stronger for better security`;
+            isValid = false;
           } else {
-            successMessage = 'Valid password';
+            successMessage = `Excellent password! Strength: ${strength.label}`;
           }
-          checkPasswordStrength(value);
           break;
 
         case 'confirm-password':
@@ -630,29 +691,56 @@
       return isValid;
     }
 
-    // Simplified password strength checker
+    // Password strength checker with comprehensive validation
     function checkPasswordStrength(password) {
       let score = 0;
 
       // Length scoring
-      if (password.length >= 6) score++;
       if (password.length >= 8) score++;
       if (password.length >= 12) score++;
+      if (password.length >= 16) score++;
+
+      // Character type scoring
+      if (/[a-z]/.test(password)) score++;
+      if (/[A-Z]/.test(password)) score++;
+      if (/[0-9]/.test(password)) score++;
+      if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+
+      // Additional security checks
+      if (password.length >= 10 && /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(password)) {
+        score++; // Bonus for meeting all criteria with good length
+      }
+
+      // Penalty for common patterns
+      if (/(.)\1{2,}/.test(password)) score -= 2; // Repeated characters
+      if (/^(.{0,2})\1+$/.test(password)) score -= 2; // Repetitive patterns
+      if (isCommonPassword(password)) score -= 3; // Common passwords
 
       const strengthFill = document.getElementById('strengthFill');
       const strengthText = document.getElementById('strengthText');
       
-      let label, className;
+      let label, className, details;
       
-      if (score === 1) {
-        label = 'Weak';
+      if (score < 2) {
+        label = 'Very Weak';
         className = 'strength-weak';
-      } else if (score === 2) {
-        label = 'Fair';
+        details = 'Add more character types and length';
+      } else if (score < 4) {
+        label = 'Weak';
         className = 'strength-fair';
-      } else {
+        details = 'Include uppercase, numbers, and symbols';
+      } else if (score < 6) {
+        label = 'Good';
+        className = 'strength-good';
+        details = 'Consider making it longer';
+      } else if (score < 8) {
         label = 'Strong';
         className = 'strength-strong';
+        details = 'Excellent password!';
+      } else {
+        label = 'Very Strong';
+        className = 'strength-strong';
+        details = 'Perfect password security!';
       }
 
       if (strengthFill) {
@@ -660,10 +748,38 @@
       }
       
       if (strengthText) {
-        strengthText.textContent = password ? `Password strength: ${label}` : '';
+        strengthText.textContent = password ? `${label} - ${details}` : 'Password requirements: 8+ characters, upper/lowercase, numbers, symbols';
       }
 
-      return score;
+      return { score, label, details };
+    }
+
+    // Check for common passwords
+    function isCommonPassword(password) {
+      const commonPasswords = [
+        'password', 'password123', '123456', '123456789', 'qwerty', 'abc123', 
+        'password1', 'admin', 'letmein', 'welcome', 'monkey', '1234567890',
+        'password12', 'qwerty123', '123abc', 'admin123', 'root', 'toor',
+        'pass', 'test', 'guest', 'user', 'demo', 'sample', 'temp', 'default',
+        'buyer', 'purchase', 'business', 'company', 'trade', 'market'
+      ];
+      
+      return commonPasswords.includes(password.toLowerCase()) || 
+             commonPasswords.some(common => password.toLowerCase().includes(common));
+    }
+
+    // Check if password contains personal information
+    function containsPersonalInfo(password) {
+      const firstName = document.getElementById('first-name').value.toLowerCase();
+      const lastName = document.getElementById('last-name').value.toLowerCase();
+      const email = document.getElementById('email').value.toLowerCase().split('@')[0];
+      
+      const personalInfo = [firstName, lastName, email].filter(info => info.length > 2);
+      
+      return personalInfo.some(info => 
+        password.toLowerCase().includes(info) || 
+        info.includes(password.toLowerCase())
+      );
     }
 
     // Add event listeners to all fields
@@ -678,9 +794,10 @@
           updateSubmitButton();
         });
 
-        // Special handling for password
+        // Special handling for password with real-time requirement checking
         if (fieldId === 'password') {
           element.addEventListener('input', function() {
+            updatePasswordRequirements(this.value);
             const confirmPassword = document.getElementById('confirm-password');
             if (confirmPassword.value) {
               validateField('confirm-password', confirmPassword.value);
@@ -689,6 +806,30 @@
         }
       }
     });
+
+    // Update password requirement indicators
+    function updatePasswordRequirements(password) {
+      const requirements = [
+        { id: 'req-length', test: password.length >= 8, text: 'At least 8 characters' },
+        { id: 'req-lower', test: /[a-z]/.test(password), text: 'One lowercase letter (a-z)' },
+        { id: 'req-upper', test: /[A-Z]/.test(password), text: 'One uppercase letter (A-Z)' },
+        { id: 'req-number', test: /[0-9]/.test(password), text: 'One number (0-9)' },
+        { id: 'req-special', test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password), text: 'One special character (!@#$%^&*)' }
+      ];
+
+      requirements.forEach(req => {
+        const element = document.getElementById(req.id);
+        if (element) {
+          if (req.test) {
+            element.style.color = '#4CAF50';
+            element.textContent = '✓ ' + req.text;
+          } else {
+            element.style.color = '#f44336';
+            element.textContent = '✗ ' + req.text;
+          }
+        }
+      });
+    }
 
     // Update form completion progress
     function updateFormProgress() {
@@ -761,11 +902,21 @@
         return;
       }
 
+      // Additional checks
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      if (password !== confirmPassword) {
+        alert('Passwords do not match. Please check and try again.');
+        document.getElementById('confirm-password').focus();
+        return;
+      }
+
       // Show loading screen
       registrationForm.style.display = 'none';
       loadingScreen.style.display = 'block';
 
-      // Submit the form
+      // Submit the form after a short delay
       setTimeout(() => {
         form.submit();
       }, 1000);
@@ -791,14 +942,8 @@
     // Auto-format phone number
     document.getElementById('mobile').addEventListener('input', function(e) {
       let value = e.target.value.replace(/\D/g, '');
-      if (value.length > 0) {
-        if (value.length <= 3) {
-          value = value;
-        } else if (value.length <= 6) {
-          value = value.slice(0, 3) + '-' + value.slice(3);
-        } else {
-          value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
-        }
+      if (value.length > 10) {
+        value = value.slice(0, 10);
       }
       e.target.value = value;
     });
@@ -820,6 +965,19 @@
       }
     });
 
+    // Email validation with real-time domain check
+    document.getElementById('email').addEventListener('blur', function(e) {
+      const email = e.target.value.toLowerCase();
+      if (email && validationRules.email.test(email)) {
+        const domain = email.split('@')[1];
+        const commonDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'aol.com'];
+        
+        if (!commonDomains.includes(domain)) {
+          console.log('Uncommon email domain detected:', domain);
+        }
+      }
+    });
+
     // Initialize form
     document.addEventListener('DOMContentLoaded', function() {
       updateFormProgress();
@@ -827,9 +985,16 @@
       
       // Focus on first field
       document.getElementById('first-name').focus();
+      
+      // Add initial help text
+      setTimeout(() => {
+        if (document.getElementById('first-name').value === '') {
+          document.getElementById('progressText').textContent = '0% Complete - Start by entering your name';
+        }
+      }, 1000);
     });
 
-    // Keyboard shortcuts
+    // Add keyboard shortcuts
     document.addEventListener('keydown', function(e) {
       // Ctrl/Cmd + Enter to submit form (if valid)
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -843,7 +1008,22 @@
         closeTerms();
       }
     });
+
+    // Prevent form submission on Enter key (except for submit button)
+    form.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target.type !== 'submit') {
+        e.preventDefault();
+        // Move to next field
+        const formElements = Array.from(form.elements);
+        const currentIndex = formElements.indexOf(e.target);
+        const nextElement = formElements[currentIndex + 1];
+        if (nextElement && nextElement.type !== 'submit') {
+          nextElement.focus();
+        }
+      }
+    });
   </script>
 
+ 
 </body>
 </html>

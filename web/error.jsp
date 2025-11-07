@@ -57,6 +57,13 @@
             word-break: break-word;
         }
         
+        .user-message {
+            color: #666;
+            font-size: 14px;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+        
         .btn-container {
             margin-top: 30px;
         }
@@ -108,16 +115,66 @@
         
         <% 
             String errorMsg = request.getParameter("error");
+            String userMessage = "";
+            String registrationType = "Buyer"; // Default
+            String tryAgainLink = "BuyerRegistration.html";
+            String homeLink = "Home.html";
+            
+            // Determine registration type from multiple sources
+            String referer = request.getHeader("referer");
+            String type = request.getParameter("type");
+            String source = request.getParameter("source");
+            
+            // Check if it's from Farmer registration
+            boolean isFarmer = false;
+            
+            if (type != null && type.equalsIgnoreCase("farmer")) {
+                isFarmer = true;
+            } else if (source != null && source.toLowerCase().contains("farmer")) {
+                isFarmer = true;
+            } else if (referer != null && referer.toLowerCase().contains("farmer")) {
+                isFarmer = true;
+            }
+            
+            // Set appropriate links based on registration type
+            if (isFarmer) {
+                registrationType = "Farmer";
+                tryAgainLink = "FarmerRegistration.html";
+            } else {
+                registrationType = "Buyer";
+                tryAgainLink = "BuyerRegistration.html";
+            }
+            
+            // Parse the error message
             if (errorMsg != null && errorMsg.contains("Duplicate entry")) {
+                // Extract the key information from the error message
+                // Error format: "Duplicate entry 'value' for key 'key_number'"
+                
+                if (errorMsg.contains("for key 2") || errorMsg.contains("for key '2'")) {
+                    // Key 2 is mobile number
+                    userMessage = "This mobile number is already registered. Please try with a different mobile number or contact support if you've forgotten your account details.";
+                } else if (errorMsg.contains("for key 3") || errorMsg.contains("for key '3'")) {
+                    // Key 3 is email
+                    userMessage = "This email address is already registered. Please try with a different email address or use the login page if you already have an account.";
+                } else {
+                    // Generic duplicate message
+                    userMessage = "This information is already registered in our system. Please check your details and try again with different information.";
+                }
+            } else if (errorMsg != null) {
+                // Other error messages
+                userMessage = "Please check your information and try again. Make sure all fields are filled correctly. If the problem persists, contact support.";
+            }
         %>
-            <p style="color: #666; font-size: 14px;">
-                This email address is already registered. Please try with a different email address.
+        
+        <% if (!userMessage.isEmpty()) { %>
+            <p class="user-message">
+                <%= userMessage %>
             </p>
         <% } %>
         
         <div class="btn-container">
-            <a href="BuyerRegistration.html" class="btn btn-primary">Try Again</a>
-            <a href="Home.html" class="btn btn-secondary">Home Page</a>
+            <a href="<%= tryAgainLink %>" class="btn btn-primary">Try Again (<%= registrationType %>)</a>
+            <a href="<%= homeLink %>" class="btn btn-secondary">Home Page</a>
         </div>
     </div>
 </body>

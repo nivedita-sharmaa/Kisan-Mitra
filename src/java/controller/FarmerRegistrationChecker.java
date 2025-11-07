@@ -3,6 +3,7 @@ package controller;
 import db.DBConnector;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URLEncoder;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -44,15 +45,20 @@ public class FarmerRegistrationChecker extends HttpServlet {
         System.out.println(query2);
         i = st.executeUpdate(query2);
 
-        if (i > 0) {
-            // ✅ Redirect to Thank You page
-            response.sendRedirect("Thankyou.html");
-        } else {
-            out.println("Registration failed. Please try again.");
+         if (i > 0) {
+                response.sendRedirect("Thankyou.html");
+            } else {
+                response.sendRedirect("error.jsp?error=" + URLEncoder.encode("Registration failed. Please try again.", "UTF-8"));
+            }
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Redirect to error page with the error message
+            try {
+                response.sendRedirect("error.jsp?error=" + URLEncoder.encode(e.getMessage(), "UTF-8"));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        out.println("Database error: " + e.getMessage());
-    }
 }
 }

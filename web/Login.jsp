@@ -261,8 +261,6 @@
             Your account is secure
         </p>
     </div>
-    <div class="footer">
-        <p>&copy; 2025 Kisan Mitra. Empowering farmers through technology.</p>
-    </div>
+    
 </body>
 </html>
